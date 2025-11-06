@@ -1,0 +1,11 @@
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+  "title": "Lead Software Engineer",
+  "phoneNumbers": [
+    {
+      "value": "+1-555-999-8888",
+      "type": "work",
+      "primary": true
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+  "userName": "jsmith",
+  "name": {
+    "formatted": "Ms. Jane Smith",
+    "familyName": "Smith",
+    "givenName": "Jane",
+    "middleName": "Marie",
+    "honorificPrefix": "Ms.",
+    "honorificSuffix": ""
+  },
+  "displayName": "Jane Smith",
+  "nickName": "Janie",
+  "profileUrl": "https://login.example.com/jsmith",
+  "emails": [
+    {
+      "value": "jane.smith@example.com",
+      "type": "work",
+      "primary": true
+    },
+    {
+      "value": "j.smith@personal.example.com",
+      "type": "home"
+    }
+  ],
+  "phoneNumbers": [
+    {
+      "value": "+1-555-123-4567",
+      "type": "work",
+      "primary": true
+    },
+    {
+      "value": "+1-555-987-6543",
+      "type": "mobile"
+    }
+  ],
+  "addresses": [
+    {
+      "type": "work",
+      "streetAddress": "123 Business Ave",
+      "locality": "San Francisco",
+      "region": "CA",
+      "postalCode": "94102",
+      "country": "US",
+      "formatted": "123 Business Ave\nSan Francisco, CA 94102 US",
+      "primary": true
+    }
+  ],
+  "userType": "Employee",
+  "title": "Software Engineer",
+  "preferredLanguage": "en-US",
+  "locale": "en-US",
+  "timezone": "America/Los_Angeles",
+  "active": true
+}

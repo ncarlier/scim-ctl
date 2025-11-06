@@ -1,0 +1,25 @@
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:User"],
+  "userName": "jdoe",
+  "name": {
+    "formatted": "John Doe",
+    "familyName": "Doe",
+    "givenName": "John"
+  },
+  "displayName": "John Doe",
+  "emails": [
+    {
+      "value": "john.doe@newdomain.com",
+      "type": "work",
+      "primary": true
+    }
+  ],
+  "phoneNumbers": [
+    {
+      "value": "+1-555-555-1234",
+      "type": "work"
+    }
+  ],
+  "title": "Senior Software Engineer",
+  "active": true
+}

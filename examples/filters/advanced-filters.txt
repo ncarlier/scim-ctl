@@ -1,0 +1,32 @@
+# Advanced SCIM Search Filters
+# Complex filters combining multiple conditions
+
+# Users with work email ending in specific domain AND active
+emails[type eq "work" and value ew "@company.com"] and active eq true
+
+# Users with either manager title OR director title
+title eq "Manager" or title eq "Director"
+
+# Users created in the last 30 days (example timestamp)
+meta.created gt "2024-01-01T00:00:00Z"
+
+# Users with phone numbers AND specific user type
+phoneNumbers pr and userType eq "Employee"
+
+# Users without profile URL
+profileUrl eq null
+
+# Users with addresses in specific region
+addresses[region eq "CA" and country eq "US"]
+
+# Enterprise users with specific department
+urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department eq "Engineering"
+
+# Users with manager assigned
+urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:manager pr
+
+# Complex nested filter with parentheses
+(title sw "Senior" or title sw "Lead") and active eq true and emails[type eq "work"]
+
+# Users with multiple email addresses
+emails[type eq "work"] and emails[type eq "personal"]

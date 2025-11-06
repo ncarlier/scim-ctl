@@ -1,0 +1,29 @@
+# Basic SCIM Search Filters
+# These filters can be used with the search command
+
+# Find users by username
+userName eq "jdoe"
+
+# Find active users
+active eq true
+
+# Find inactive users  
+active eq false
+
+# Find users by email
+emails[type eq "work" and value co "@example.com"]
+
+# Find users by family name
+name.familyName eq "Smith"
+
+# Find users by given name (case insensitive)
+name.givenName sw "John"
+
+# Find users by display name containing text
+displayName co "Manager"
+
+# Find users by title
+title eq "Software Engineer"
+
+# Find users by user type
+userType eq "Employee"

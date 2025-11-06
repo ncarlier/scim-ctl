@@ -1,0 +1,25 @@
+{
+  "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
+  "displayName": "Updated Development Team",
+  "description": "Software Development Team - Updated Description",
+  "members": [
+    {
+      "value": "2819c223-7f76-453a-919d-413861904646",
+      "$ref": "https://example.com/scim/v2/Users/2819c223-7f76-453a-919d-413861904646",
+      "display": "John Doe",
+      "type": "User"
+    },
+    {
+      "value": "902c246b-6245-4190-8e05-00816be7344a",
+      "$ref": "https://example.com/scim/v2/Users/902c246b-6245-4190-8e05-00816be7344a",
+      "display": "Jane Smith",
+      "type": "User"
+    },
+    {
+      "value": "550e8400-e29b-41d4-a716-446655440000",
+      "$ref": "https://example.com/scim/v2/Users/550e8400-e29b-41d4-a716-446655440000",
+      "display": "Bob Johnson",
+      "type": "User"
+    }
+  ]
+}

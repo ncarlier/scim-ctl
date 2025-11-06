@@ -1,0 +1,17 @@
+# Group Search Filters
+# These filters can be used when searching for groups
+
+# Find groups by display name
+displayName eq "Developers"
+
+# Find groups with specific members
+members[value eq "2819c223-7f76-453a-919d-413861904646"]
+
+# Find groups by display name pattern
+displayName sw "Engineering"
+
+# Find groups containing text in description
+description co "development"
+
+# Find groups by display name (case insensitive contains)
+displayName co "team"

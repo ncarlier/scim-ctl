@@ -1,0 +1,16 @@
+{
+  "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+  "Operations": [
+    {
+      "op": "add",
+      "path": "emails",
+      "value": [
+        {
+          "value": "work@example.com",
+          "type": "work",
+          "primary": false
+        }
+      ]
+    }
+  ]
+}

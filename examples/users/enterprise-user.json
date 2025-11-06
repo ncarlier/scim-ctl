@@ -1,0 +1,41 @@
+{
+  "schemas": [
+    "urn:ietf:params:scim:schemas:core:2.0:User",
+    "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
+  ],
+  "userName": "amanager",
+  "name": {
+    "formatted": "Alice Manager",
+    "familyName": "Manager",
+    "givenName": "Alice"
+  },
+  "displayName": "Alice Manager",
+  "emails": [
+    {
+      "value": "alice.manager@example.com",
+      "type": "work",
+      "primary": true
+    }
+  ],
+  "phoneNumbers": [
+    {
+      "value": "+1-555-234-5678",
+      "type": "work"
+    }
+  ],
+  "userType": "Employee",
+  "title": "Engineering Manager",
+  "active": true,
+  "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": {
+    "employeeNumber": "EMP-001234",
+    "costCenter": "Engineering",
+    "organization": "ACME Corp",
+    "division": "Technology",
+    "department": "Software Engineering",
+    "manager": {
+      "value": "26118915-6090-4610-87e4-49d8ca9f808d",
+      "$ref": "https://example.com/scim/v2/Users/26118915-6090-4610-87e4-49d8ca9f808d",
+      "displayName": "John Director"
+    }
+  }
+}
