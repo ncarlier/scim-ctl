@@ -201,6 +201,8 @@ interactive_mode() {
                 echo "  delete-user <id>           - Delete user"
                 echo "  config                     - Show current configuration"
                 echo "  setup                      - Setup configuration"
+                echo "  cache-info                 - Show cache information"
+                echo "  cache-clear                - Clear authentication cache"
                 echo "  verbose [on|off]           - Toggle verbose output"
                 echo "  quit                       - Exit interactive mode"
                 ;;
@@ -231,6 +233,12 @@ interactive_mode() {
             "setup")
                 setup_config
                 load_env
+                ;;
+            "cache-info")
+                cache_info
+                ;;
+            "cache-clear")
+                cache_clear
                 ;;
             "verbose")
                 case "$args" in
@@ -287,6 +295,9 @@ COMMANDS:
     update-user ID DATA Update user with JSON data
     delete-user ID      Delete user by ID (with confirmation)
     
+    cache-info          Show authentication cache information
+    cache-clear         Clear cached authentication tokens
+    
     # Direct scim-ctl execution
     exec [ARGS...]      Execute scim-ctl directly with given arguments
 
@@ -334,6 +345,23 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Show cache information
+cache_info() {
+    log_info "Checking authentication cache..."
+    run_scim_ctl cache info
+}
+
+# Clear authentication cache
+cache_clear() {
+    log_info "Clearing authentication cache..."
+    if run_scim_ctl cache clear; then
+        log_success "Authentication cache cleared successfully"
+    else
+        log_error "Failed to clear cache"
+        return 1
+    fi
+}
+
 # Main execution
 main() {
     check_binary
@@ -369,6 +397,12 @@ main() {
             ;;
         "delete-user")
             delete_user "$1"
+            ;;
+        "cache-info")
+            cache_info
+            ;;
+        "cache-clear")
+            cache_clear
             ;;
         "exec")
             run_scim_ctl "$@"

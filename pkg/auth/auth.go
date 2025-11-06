@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -46,41 +47,266 @@ type OIDCDiscovery struct {
 	TokenEndpoint               string `json:"token_endpoint"`
 }
 
+// CachedToken represents a cached token with metadata
+type CachedToken struct {
+	AccessToken  string    `json:"access_token"`
+	RefreshToken string    `json:"refresh_token"`
+	TokenType    string    `json:"token_type"`
+	ExpiresAt    time.Time `json:"expires_at"`
+	Scopes       string    `json:"scopes"`
+	Issuer       string    `json:"issuer"`
+	ClientID     string    `json:"client_id"`
+}
+
 // Authenticator handles OAuth 2.0 Device Authorization Grant flow
 type Authenticator struct {
-	config *DeviceFlowConfig
-	client *http.Client
+	config    *DeviceFlowConfig
+	client    *http.Client
+	cacheFile string
 }
 
 // NewAuthenticator creates a new authenticator
 func NewAuthenticator(config *DeviceFlowConfig) *Authenticator {
+	// Create cache file path based on configuration
+	homeDir, _ := os.UserHomeDir()
+	cacheDir := fmt.Sprintf("%s/.cache/scim-ctl", homeDir)
+	os.MkdirAll(cacheDir, 0700) // Create cache directory with restricted permissions
+	
+	// Create a unique cache file name based on issuer and client_id
+	cacheFile := fmt.Sprintf("%s/token_%x.json", cacheDir, hashConfig(config))
+	
 	return &Authenticator{
-		config: config,
-		client: &http.Client{Timeout: 30 * time.Second},
+		config:    config,
+		client:    &http.Client{Timeout: 30 * time.Second},
+		cacheFile: cacheFile,
 	}
+}
+
+// loadCachedToken loads a token from cache if it exists and is valid
+func (a *Authenticator) loadCachedToken(verbose bool) (*CachedToken, error) {
+	data, err := os.ReadFile(a.cacheFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil // No cached token
+		}
+		return nil, fmt.Errorf("failed to read cache file: %w", err)
+	}
+
+	var cached CachedToken
+	if err := json.Unmarshal(data, &cached); err != nil {
+		if verbose {
+			fmt.Fprintf(os.Stderr, "Invalid cache file, ignoring: %v\n", err)
+		}
+		return nil, nil
+	}
+
+	// Check if token is for the same configuration
+	if cached.Issuer != a.config.Issuer || cached.ClientID != a.config.ClientID {
+		if verbose {
+			fmt.Fprintf(os.Stderr, "Cache token is for different configuration, ignoring\n")
+		}
+		return nil, nil
+	}
+
+	return &cached, nil
+}
+
+// saveCachedToken saves a token to cache
+func (a *Authenticator) saveCachedToken(token *TokenResponse, verbose bool) error {
+	// Calculate expiry time
+	expiresAt := time.Now().Add(time.Duration(token.ExpiresIn) * time.Second)
+	
+	cached := CachedToken{
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
+		TokenType:    token.TokenType,
+		ExpiresAt:    expiresAt,
+		Scopes:       token.Scope,
+		Issuer:       a.config.Issuer,
+		ClientID:     a.config.ClientID,
+	}
+
+	data, err := json.MarshalIndent(cached, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal token: %w", err)
+	}
+
+	if err := os.WriteFile(a.cacheFile, data, 0600); err != nil {
+		return fmt.Errorf("failed to write cache file: %w", err)
+	}
+
+	if verbose {
+		fmt.Fprintf(os.Stderr, "Token cached to %s\n", a.cacheFile)
+	}
+
+	return nil
+}
+
+// refreshToken attempts to refresh an access token using the refresh token
+func (a *Authenticator) refreshToken(ctx context.Context, cachedToken *CachedToken, verbose bool) (*TokenResponse, error) {
+	if cachedToken.RefreshToken == "" {
+		return nil, fmt.Errorf("no refresh token available")
+	}
+
+	// Discover OIDC endpoints
+	discovery, err := a.discoverOIDC(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to discover OIDC endpoints: %w", err)
+	}
+
+	data := url.Values{
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {cachedToken.RefreshToken},
+		"client_id":     {a.config.ClientID},
+	}
+
+	if a.config.ClientSecret != "" {
+		data.Set("client_secret", a.config.ClientSecret)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", discovery.TokenEndpoint, strings.NewReader(data.Encode()))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	if verbose {
+		fmt.Fprintf(os.Stderr, "Refreshing token...\n")
+	}
+
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var tokenResp map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("token refresh failed with status %d: %s", 
+			resp.StatusCode, getString(tokenResp, "error_description"))
+	}
+
+	token := &TokenResponse{
+		AccessToken:  getString(tokenResp, "access_token"),
+		TokenType:    getString(tokenResp, "token_type"),
+		RefreshToken: getString(tokenResp, "refresh_token"),
+		Scope:        getString(tokenResp, "scope"),
+	}
+
+	// Use existing refresh token if new one not provided
+	if token.RefreshToken == "" {
+		token.RefreshToken = cachedToken.RefreshToken
+	}
+
+	if expiresIn, ok := tokenResp["expires_in"].(float64); ok {
+		token.ExpiresIn = int(expiresIn)
+	}
+
+	if verbose {
+		fmt.Fprintf(os.Stderr, "Token refreshed successfully\n")
+	}
+
+	return token, nil
+}
+
+// clearCache removes the cached token file
+func (a *Authenticator) clearCache(verbose bool) error {
+	if err := os.Remove(a.cacheFile); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to clear cache: %w", err)
+	}
+	
+	if verbose {
+		fmt.Fprintf(os.Stderr, "Token cache cleared\n")
+	}
+	
+	return nil
 }
 
 // GetAccessToken performs the device flow and returns an access token
 func (a *Authenticator) GetAccessToken(ctx context.Context, verbose bool) (string, error) {
+	// Try to load cached token first
+	cachedToken, err := a.loadCachedToken(verbose)
+	if err != nil && verbose {
+		fmt.Fprintf(os.Stderr, "Failed to load cached token: %v\n", err)
+	}
+
+	// Check if we have a valid cached token
+	if cachedToken != nil {
+		// Check if token is still valid (with 5 minute buffer)
+		if time.Now().Add(5 * time.Minute).Before(cachedToken.ExpiresAt) {
+			if verbose {
+				fmt.Fprintf(os.Stderr, "Using cached access token (expires: %v)\n", cachedToken.ExpiresAt.Format(time.RFC3339))
+			}
+			return cachedToken.AccessToken, nil
+		}
+
+		// Token is expired or about to expire, try to refresh
+		if cachedToken.RefreshToken != "" {
+			if verbose {
+				fmt.Fprintf(os.Stderr, "Access token expired, attempting refresh...\n")
+			}
+			
+			refreshed, err := a.refreshToken(ctx, cachedToken, verbose)
+			if err != nil {
+				if verbose {
+					fmt.Fprintf(os.Stderr, "Token refresh failed: %v, falling back to device flow\n", err)
+				}
+				// Clear invalid cache and fall through to device flow
+				a.clearCache(verbose)
+			} else {
+				// Save refreshed token and return it
+				if err := a.saveCachedToken(refreshed, verbose); err != nil && verbose {
+					fmt.Fprintf(os.Stderr, "Failed to cache refreshed token: %v\n", err)
+				}
+				return refreshed.AccessToken, nil
+			}
+		} else if verbose {
+			fmt.Fprintf(os.Stderr, "Access token expired and no refresh token available, performing new authentication\n")
+		}
+	} else if verbose {
+		fmt.Fprintf(os.Stderr, "No cached token found, performing device flow authentication\n")
+	}
+
+	// No valid cached token, perform device flow
+	token, err := a.performDeviceFlow(ctx, verbose)
+	if err != nil {
+		return "", err
+	}
+
+	// Cache the new token
+	if err := a.saveCachedToken(token, verbose); err != nil && verbose {
+		fmt.Fprintf(os.Stderr, "Failed to cache token: %v\n", err)
+	}
+
+	return token.AccessToken, nil
+}
+
+// performDeviceFlow executes the OAuth 2.0 device authorization grant flow
+func (a *Authenticator) performDeviceFlow(ctx context.Context, verbose bool) (*TokenResponse, error) {
 	// Discover OIDC endpoints
 	discovery, err := a.discoverOIDC(ctx)
 	if err != nil {
-		return "", fmt.Errorf("failed to discover OIDC endpoints: %w", err)
+		return nil, fmt.Errorf("failed to discover OIDC endpoints: %w", err)
 	}
 
 	// Request device code
 	deviceCode, err := a.requestDeviceCode(ctx, discovery.DeviceAuthorizationEndpoint, verbose)
 	if err != nil {
-		return "", fmt.Errorf("failed to request device code: %w", err)
+		return nil, fmt.Errorf("failed to request device code: %w", err)
 	}
 
 	// Poll for token
 	token, err := a.pollForToken(ctx, discovery.TokenEndpoint, deviceCode, verbose)
 	if err != nil {
-		return "", fmt.Errorf("failed to get token: %w", err)
+		return nil, fmt.Errorf("failed to get token: %w", err)
 	}
 
-	return token.AccessToken, nil
+	return token, nil
 }
 
 // discoverOIDC discovers OIDC endpoints
@@ -270,6 +496,22 @@ func ValidateJWT(tokenString string) (*jwt.Token, error) {
 	}
 
 	return token, nil
+}
+
+// ClearCache removes the cached token file (public method)
+func (a *Authenticator) ClearCache(verbose bool) error {
+	return a.clearCache(verbose)
+}
+
+// GetCacheInfo returns information about the cached token (public method)
+func (a *Authenticator) GetCacheInfo() (*CachedToken, error) {
+	return a.loadCachedToken(false)
+}
+
+// hashConfig creates a hash of the configuration for cache file naming
+func hashConfig(config *DeviceFlowConfig) [32]byte {
+	data := fmt.Sprintf("%s:%s", config.Issuer, config.ClientID)
+	return sha256.Sum256([]byte(data))
 }
 
 func getString(m map[string]interface{}, key string) string {

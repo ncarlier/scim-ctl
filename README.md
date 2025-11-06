@@ -2,8 +2,6 @@
 
 `scim-ctl` is a CLI tool for interacting with a SCIM (System for Cross-domain Identity Management) server. It supports CRUD operations.
 
-It's built with [Go](https://go.dev/).
-
 # Features
 
 ## SCIM Support
@@ -133,4 +131,30 @@ scim-ctl search --resource-type --query 'userName eq "bob"'
 | `--query`          | `-q`  | SCIM filter expression          |
 | `--start-index`    | `-s`  | Paginations start index         |
 | `--items-per-page` | `-i`  | Paginations size                |
+
+## Examples and Usage Guides
+
+The `examples/` directory contains comprehensive SCIM JSON examples and detailed usage instructions:
+
+- **[examples/README.md](examples/README.md)** - Complete usage guide with CLI command examples
+- **examples/users/** - User resource creation and management examples  
+- **examples/groups/** - Group resource examples with member management
+- **examples/updates/** - Full resource update examples (PUT operations)
+- **examples/patches/** - PATCH operation examples for fine-grained updates
+- **examples/filters/** - Search filter patterns and examples
+
+### Quick Start with Examples
+
+```bash
+# Create a user from example template
+scim-ctl create -t user -d @examples/users/basic-user.json
+
+# Search for active users  
+scim-ctl search -t user -q 'active eq true'
+
+# Add email to user using PATCH
+scim-ctl patch -t user --id USER_ID -d @examples/patches/user-add-email.json
+```
+
+For detailed usage instructions and more examples, see the [Examples README](examples/README.md).
 
