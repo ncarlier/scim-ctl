@@ -17,6 +17,7 @@ var (
 	searchItemsPerPage int
 	searchSortBy       string
 	searchSortOrder    string
+	searchAttributes   []string
 )
 
 // searchCmd represents the search command
@@ -29,7 +30,9 @@ Examples:
   scim-ctl search --resource-type user --query 'userName eq "bob"'
   scim-ctl search -t group -q 'displayName co "admin"' --start-index 1 --items-per-page 10
   scim-ctl search -t user -q 'active eq true' --sort-by userName --sort-order ascending
-  scim-ctl search -t user --sort-by meta.created --sort-order descending`,
+  scim-ctl search -t user --sort-by meta.created --sort-order descending
+  scim-ctl search -t user -q 'active eq true' --attributes userName,emails
+  scim-ctl search -t user --attributes userName --attributes emails`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Get()
 		if err != nil {
@@ -47,7 +50,7 @@ Examples:
 		}
 
 		// Search for resources
-		results, err := client.SearchResources(ctx, searchResourceType, searchQuery, searchStartIndex, searchItemsPerPage, searchSortBy, searchSortOrder)
+		results, err := client.SearchResources(ctx, searchResourceType, searchQuery, searchStartIndex, searchItemsPerPage, searchSortBy, searchSortOrder, searchAttributes)
 		if err != nil {
 			return fmt.Errorf("failed to search resources: %w", err)
 		}
@@ -72,5 +75,6 @@ func init() {
 	searchCmd.Flags().IntVarP(&searchItemsPerPage, "items-per-page", "i", 0, "Pagination size")
 	searchCmd.Flags().StringVar(&searchSortBy, "sort-by", "", "Attribute to sort by (e.g., userName, meta.created)")
 	searchCmd.Flags().StringVar(&searchSortOrder, "sort-order", "", "Sort order: ascending or descending")
+	searchCmd.Flags().StringSliceVarP(&searchAttributes, "attributes", "a", []string{}, "Comma-separated list of attributes to return")
 	searchCmd.MarkFlagRequired("resource-type")
 }

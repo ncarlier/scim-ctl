@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/idf-educ/idm/scim-ctl/pkg/config"
 	"github.com/idf-educ/idm/scim-ctl/pkg/scim"
+	"github.com/spf13/cobra"
 )
 
 var (
 	getResourceType string
 	getID           string
+	getAttributes   []string
 )
 
 // getCmd represents the get command
@@ -23,7 +24,9 @@ var getCmd = &cobra.Command{
 
 Examples:
   scim-ctl get --resource-type user --id 1234
-  scim-ctl get -t group --id abcd-efgh-ijkl`,
+  scim-ctl get -t group --id abcd-efgh-ijkl
+  scim-ctl get -t user --id 1234 --attributes userName,emails
+  scim-ctl get -t user --id 1234 --attributes userName --attributes emails`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Get()
 		if err != nil {
@@ -41,7 +44,7 @@ Examples:
 		}
 
 		// Get the resource
-		resource, err := client.GetResource(ctx, getResourceType, getID)
+		resource, err := client.GetResource(ctx, getResourceType, getID, getAttributes)
 		if err != nil {
 			return fmt.Errorf("failed to get resource: %w", err)
 		}
@@ -59,9 +62,10 @@ Examples:
 
 func init() {
 	rootCmd.AddCommand(getCmd)
-	
+
 	getCmd.Flags().StringVarP(&getResourceType, "resource-type", "t", "", "SCIM resource type (required)")
 	getCmd.Flags().StringVar(&getID, "id", "", "SCIM resource identifier (required)")
+	getCmd.Flags().StringSliceVarP(&getAttributes, "attributes", "a", []string{}, "Comma-separated list of attributes to return")
 	getCmd.MarkFlagRequired("resource-type")
 	getCmd.MarkFlagRequired("id")
 }

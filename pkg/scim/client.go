@@ -136,10 +136,22 @@ func (c *Client) CreateResource(ctx context.Context, resourceType string, data R
 }
 
 // GetResource retrieves a SCIM resource by ID
-func (c *Client) GetResource(ctx context.Context, resourceType, id string) (Resource, error) {
-	url := c.baseURL + "/" + titleCase(resourceType) + "s/" + id
+func (c *Client) GetResource(ctx context.Context, resourceType, id string, attributes []string) (Resource, error) {
+	baseURL := c.baseURL + "/" + titleCase(resourceType) + "s/" + id
 
-	resp, err := c.doRequest(ctx, "GET", url, nil)
+	u, err := url.Parse(baseURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse URL: %w", err)
+	}
+
+	// Add attributes query parameter if specified
+	if len(attributes) > 0 {
+		query := u.Query()
+		query.Set("attributes", strings.Join(attributes, ","))
+		u.RawQuery = query.Encode()
+	}
+
+	resp, err := c.doRequest(ctx, "GET", u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +195,7 @@ func (c *Client) DeleteResource(ctx context.Context, resourceType, id string) er
 }
 
 // SearchResources searches SCIM resources
-func (c *Client) SearchResources(ctx context.Context, resourceType string, filter string, startIndex, count int, sortBy, sortOrder string) (*ListResponse, error) {
+func (c *Client) SearchResources(ctx context.Context, resourceType string, filter string, startIndex, count int, sortBy, sortOrder string, attributes []string) (*ListResponse, error) {
 	baseURL := c.baseURL + "/" + titleCase(resourceType) + "s"
 
 	// Use URL parameters for GET request
@@ -207,6 +219,9 @@ func (c *Client) SearchResources(ctx context.Context, resourceType string, filte
 	}
 	if sortOrder != "" {
 		query.Set("sortOrder", sortOrder)
+	}
+	if len(attributes) > 0 {
+		query.Set("attributes", strings.Join(attributes, ","))
 	}
 	u.RawQuery = query.Encode()
 
