@@ -116,7 +116,7 @@ func (c *Client) GetSchemas(ctx context.Context) ([]Resource, error) {
 // CreateResource creates a SCIM resource
 func (c *Client) CreateResource(ctx context.Context, resourceType string, data Resource) (Resource, error) {
 	url := c.baseURL + "/" + titleCase(resourceType) + "s"
-	
+
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal resource data: %w", err)
@@ -138,7 +138,7 @@ func (c *Client) CreateResource(ctx context.Context, resourceType string, data R
 // GetResource retrieves a SCIM resource by ID
 func (c *Client) GetResource(ctx context.Context, resourceType, id string) (Resource, error) {
 	url := c.baseURL + "/" + titleCase(resourceType) + "s/" + id
-	
+
 	resp, err := c.doRequest(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -155,7 +155,7 @@ func (c *Client) GetResource(ctx context.Context, resourceType, id string) (Reso
 // UpdateResource updates a SCIM resource
 func (c *Client) UpdateResource(ctx context.Context, resourceType, id string, data Resource) (Resource, error) {
 	url := c.baseURL + "/" + titleCase(resourceType) + "s/" + id
-	
+
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal resource data: %w", err)
@@ -177,15 +177,15 @@ func (c *Client) UpdateResource(ctx context.Context, resourceType, id string, da
 // DeleteResource deletes a SCIM resource
 func (c *Client) DeleteResource(ctx context.Context, resourceType, id string) error {
 	url := c.baseURL + "/" + titleCase(resourceType) + "s/" + id
-	
+
 	_, err := c.doRequest(ctx, "DELETE", url, nil)
 	return err
 }
 
 // SearchResources searches SCIM resources
-func (c *Client) SearchResources(ctx context.Context, resourceType string, filter string, startIndex, count int) (*ListResponse, error) {
+func (c *Client) SearchResources(ctx context.Context, resourceType string, filter string, startIndex, count int, sortBy, sortOrder string) (*ListResponse, error) {
 	baseURL := c.baseURL + "/" + titleCase(resourceType) + "s"
-	
+
 	// Use URL parameters for GET request
 	u, err := url.Parse(baseURL)
 	if err != nil {
@@ -201,6 +201,12 @@ func (c *Client) SearchResources(ctx context.Context, resourceType string, filte
 	}
 	if count > 0 {
 		query.Set("count", fmt.Sprintf("%d", count))
+	}
+	if sortBy != "" {
+		query.Set("sortBy", sortBy)
+	}
+	if sortOrder != "" {
+		query.Set("sortOrder", sortOrder)
 	}
 	u.RawQuery = query.Encode()
 
@@ -232,7 +238,7 @@ func (c *Client) doRequest(ctx context.Context, method, url string, body []byte)
 	// Set headers
 	req.Header.Set("Accept", "application/scim+json")
 	req.Header.Set("Content-Type", "application/scim+json")
-	
+
 	if c.accessToken != "" {
 		req.Header.Set("Authorization", "Bearer "+c.accessToken)
 	}
