@@ -195,7 +195,7 @@ func (c *Client) DeleteResource(ctx context.Context, resourceType, id string) er
 }
 
 // SearchResources searches SCIM resources
-func (c *Client) SearchResources(ctx context.Context, resourceType string, filter string, startIndex, count int, sortBy, sortOrder string, attributes []string) (*ListResponse, error) {
+func (c *Client) SearchResources(ctx context.Context, resourceType string, filter string, query string, startIndex, count int, sortBy, sortOrder string, attributes []string) (*ListResponse, error) {
 	baseURL := c.baseURL + "/" + titleCase(resourceType) + "s"
 
 	// Use URL parameters for GET request
@@ -204,26 +204,29 @@ func (c *Client) SearchResources(ctx context.Context, resourceType string, filte
 		return nil, fmt.Errorf("failed to parse URL: %w", err)
 	}
 
-	query := u.Query()
+	queryParams := u.Query()
 	if filter != "" {
-		query.Set("filter", filter)
+		queryParams.Set("filter", filter)
+	}
+	if query != "" {
+		queryParams.Set("q", query)
 	}
 	if startIndex > 0 {
-		query.Set("startIndex", fmt.Sprintf("%d", startIndex))
+		queryParams.Set("startIndex", fmt.Sprintf("%d", startIndex))
 	}
 	if count > 0 {
-		query.Set("count", fmt.Sprintf("%d", count))
+		queryParams.Set("count", fmt.Sprintf("%d", count))
 	}
 	if sortBy != "" {
-		query.Set("sortBy", sortBy)
+		queryParams.Set("sortBy", sortBy)
 	}
 	if sortOrder != "" {
-		query.Set("sortOrder", sortOrder)
+		queryParams.Set("sortOrder", sortOrder)
 	}
 	if len(attributes) > 0 {
-		query.Set("attributes", strings.Join(attributes, ","))
+		queryParams.Set("attributes", strings.Join(attributes, ","))
 	}
-	u.RawQuery = query.Encode()
+	u.RawQuery = queryParams.Encode()
 
 	resp, err := c.doRequest(ctx, "GET", u.String(), nil)
 	if err != nil {

@@ -213,6 +213,9 @@ scim-ctl users list --filter 'emails[value eq "john@example.com"]'
 # Search active users
 scim-ctl users list --filter 'active eq true'
 
+# Full-text search (out of SCIM spec)
+scim-ctl search -t user -q "john doe"
+
 # Using bash script with interactive mode
 ./scim.sh
 # Then select: list-users
@@ -228,6 +231,9 @@ scim-ctl users list --filter 'name.familyName co "Smith" and active eq true'
 
 # Enterprise extension filters
 scim-ctl users list --filter 'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department eq "Engineering"'
+
+# Combine full-text search with filters
+scim-ctl search -t user -f 'active eq true' -q "manager"
 ```
 
 See `examples/filters/advanced-filters.txt` for complex filter examples.

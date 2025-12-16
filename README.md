@@ -123,14 +123,16 @@ Search SCIM resources.
 
 ```bash
 scim-ctl search --resource-type user --filter 'userName eq "bob"'
+scim-ctl search -t user -q "john doe"
 ```
 
-| Parameter          | Alias | Description                     |
-| ------------------ | ----- | ------------------------------- |
-| `--resource-type`  | `-t`  | SCIM resource type              |
-| `--filter`         | `-f`  | SCIM filter expression          |
-| `--start-index`    | `-s`  | Paginations start index         |
-| `--items-per-page` | `-i`  | Paginations size                |
+| Parameter          | Alias | Description                                    |
+| ------------------ | ----- | ---------------------------------------------- |
+| `--resource-type`  | `-t`  | SCIM resource type                             |
+| `--filter`         | `-f`  | SCIM filter expression                         |
+| `--query`          | `-q`  | Full-text search query (out of SCIM spec)      |
+| `--start-index`    | `-s`  | Paginations start index                        |
+| `--items-per-page` | `-i`  | Paginations size                               |
 
 ## Examples and Usage Guides
 

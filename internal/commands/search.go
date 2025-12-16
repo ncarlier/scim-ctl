@@ -13,6 +13,7 @@ import (
 var (
 	searchResourceType string
 	searchFilter       string
+	searchQuery        string
 	searchStartIndex   int
 	searchItemsPerPage int
 	searchSortBy       string
@@ -28,6 +29,7 @@ var searchCmd = &cobra.Command{
 
 Examples:
   scim-ctl search --resource-type user --filter 'userName eq "bob"'
+  scim-ctl search -t user -q "john doe"
   scim-ctl search -t group -f 'displayName co "admin"' --start-index 1 --items-per-page 10
   scim-ctl search -t user -f 'active eq true' --sort-by userName --sort-order ascending
   scim-ctl search -t user --sort-by meta.created --sort-order descending
@@ -50,7 +52,7 @@ Examples:
 		}
 
 		// Search for resources
-		results, err := client.SearchResources(ctx, searchResourceType, searchFilter, searchStartIndex, searchItemsPerPage, searchSortBy, searchSortOrder, searchAttributes)
+		results, err := client.SearchResources(ctx, searchResourceType, searchFilter, searchQuery, searchStartIndex, searchItemsPerPage, searchSortBy, searchSortOrder, searchAttributes)
 		if err != nil {
 			return fmt.Errorf("failed to search resources: %w", err)
 		}
@@ -71,6 +73,7 @@ func init() {
 
 	searchCmd.Flags().StringVarP(&searchResourceType, "resource-type", "t", "", "SCIM resource type (required)")
 	searchCmd.Flags().StringVarP(&searchFilter, "filter", "f", "", "SCIM filter expression")
+	searchCmd.Flags().StringVarP(&searchQuery, "query", "q", "", "Full-text search query (custom extension)")
 	searchCmd.Flags().IntVarP(&searchStartIndex, "start-index", "s", 0, "Pagination start index")
 	searchCmd.Flags().IntVarP(&searchItemsPerPage, "items-per-page", "i", 0, "Pagination size")
 	searchCmd.Flags().StringVar(&searchSortBy, "sort-by", "", "Attribute to sort by (e.g., userName, meta.created)")
