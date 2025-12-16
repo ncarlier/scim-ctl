@@ -12,7 +12,7 @@ import (
 
 var (
 	searchResourceType string
-	searchQuery        string
+	searchFilter       string
 	searchStartIndex   int
 	searchItemsPerPage int
 	searchSortBy       string
@@ -27,11 +27,11 @@ var searchCmd = &cobra.Command{
 	Long: `Search for SCIM resources using SCIM filter expressions.
 
 Examples:
-  scim-ctl search --resource-type user --query 'userName eq "bob"'
-  scim-ctl search -t group -q 'displayName co "admin"' --start-index 1 --items-per-page 10
-  scim-ctl search -t user -q 'active eq true' --sort-by userName --sort-order ascending
+  scim-ctl search --resource-type user --filter 'userName eq "bob"'
+  scim-ctl search -t group -f 'displayName co "admin"' --start-index 1 --items-per-page 10
+  scim-ctl search -t user -f 'active eq true' --sort-by userName --sort-order ascending
   scim-ctl search -t user --sort-by meta.created --sort-order descending
-  scim-ctl search -t user -q 'active eq true' --attributes userName,emails
+  scim-ctl search -t user -f 'active eq true' --attributes userName,emails
   scim-ctl search -t user --attributes userName --attributes emails`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Get()
@@ -50,7 +50,7 @@ Examples:
 		}
 
 		// Search for resources
-		results, err := client.SearchResources(ctx, searchResourceType, searchQuery, searchStartIndex, searchItemsPerPage, searchSortBy, searchSortOrder, searchAttributes)
+		results, err := client.SearchResources(ctx, searchResourceType, searchFilter, searchStartIndex, searchItemsPerPage, searchSortBy, searchSortOrder, searchAttributes)
 		if err != nil {
 			return fmt.Errorf("failed to search resources: %w", err)
 		}
@@ -70,7 +70,7 @@ func init() {
 	rootCmd.AddCommand(searchCmd)
 
 	searchCmd.Flags().StringVarP(&searchResourceType, "resource-type", "t", "", "SCIM resource type (required)")
-	searchCmd.Flags().StringVarP(&searchQuery, "query", "q", "", "SCIM filter expression")
+	searchCmd.Flags().StringVarP(&searchFilter, "filter", "f", "", "SCIM filter expression")
 	searchCmd.Flags().IntVarP(&searchStartIndex, "start-index", "s", 0, "Pagination start index")
 	searchCmd.Flags().IntVarP(&searchItemsPerPage, "items-per-page", "i", 0, "Pagination size")
 	searchCmd.Flags().StringVar(&searchSortBy, "sort-by", "", "Attribute to sort by (e.g., userName, meta.created)")

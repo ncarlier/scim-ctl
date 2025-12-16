@@ -122,13 +122,13 @@ scim-ctl delete --resource-type user --id 1234
 Search SCIM resources.
 
 ```bash
-scim-ctl search --resource-type --query 'userName eq "bob"'
+scim-ctl search --resource-type user --filter 'userName eq "bob"'
 ```
 
 | Parameter          | Alias | Description                     |
 | ------------------ | ----- | ------------------------------- |
 | `--resource-type`  | `-t`  | SCIM resource type              |
-| `--query`          | `-q`  | SCIM filter expression          |
+| `--filter`         | `-f`  | SCIM filter expression          |
 | `--start-index`    | `-s`  | Paginations start index         |
 | `--items-per-page` | `-i`  | Paginations size                |
 
@@ -150,7 +150,7 @@ The `examples/` directory contains comprehensive SCIM JSON examples and detailed
 scim-ctl create -t user -d @examples/users/basic-user.json
 
 # Search for active users  
-scim-ctl search -t user -q 'active eq true'
+scim-ctl search -t user -f 'active eq true'
 
 # Add email to user using PATCH
 scim-ctl patch -t user --id USER_ID -d @examples/patches/user-add-email.json
