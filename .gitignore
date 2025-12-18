@@ -1,2 +1,4 @@
 .env
 scim-ctl
+config/
+scim-ctl.yml

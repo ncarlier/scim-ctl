@@ -9,11 +9,11 @@ import (
 )
 
 var (
-	cfgFile    string
-	target     string
-	verbose    bool
-	oidcIssuer string
-	clientID   string
+	cfgFile      string
+	target       string
+	verbose      bool
+	oidcIssuer   string
+	clientID     string
 	clientSecret string
 )
 
@@ -34,7 +34,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	// Global flags
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.scim-ctl.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./scim-ctl.yml)")
 	rootCmd.PersistentFlags().StringVar(&target, "target", "", "SCIM target URL (env: SCIM_CTL_TARGET)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().StringVar(&oidcIssuer, "oidc-issuer", "", "OpenID Connect Issuer (env: SCIM_CTL_OIDC_ISSUER)")
@@ -60,12 +60,10 @@ func initConfig() {
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {
-		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
-
-		viper.AddConfigPath(home)
+		// Search for config in the current directory first
+		viper.AddConfigPath(".")
 		viper.SetConfigType("yaml")
-		viper.SetConfigName(".scim-ctl")
+		viper.SetConfigName("scim-ctl")
 	}
 
 	viper.AutomaticEnv()
