@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -108,6 +109,22 @@ func (c *Client) GetSchemas(ctx context.Context) ([]Resource, error) {
 	var listResp ListResponse
 	if err := json.Unmarshal(resp, &listResp); err != nil {
 		return nil, fmt.Errorf("failed to decode schemas response: %w", err)
+	}
+
+	return listResp.Resources, nil
+}
+
+// GetResourceTypes retrieves SCIM resource types
+func (c *Client) GetResourceTypes(ctx context.Context) ([]Resource, error) {
+	url := c.baseURL + "/ResourceTypes"
+	resp, err := c.doRequest(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var listResp ListResponse
+	if err := json.Unmarshal(resp, &listResp); err != nil {
+		return nil, fmt.Errorf("failed to decode resource types response: %w", err)
 	}
 
 	return listResp.Resources, nil
@@ -262,9 +279,9 @@ func (c *Client) doRequest(ctx context.Context, method, url string, body []byte)
 	}
 
 	if c.verbose {
-		fmt.Printf("→ %s %s\n", method, url)
+		fmt.Fprintf(os.Stderr, "→ %s %s\n", method, url)
 		if body != nil {
-			fmt.Printf("→ Body: %s\n", string(body))
+			fmt.Fprintf(os.Stderr, "→ Body: %s\n", string(body))
 		}
 	}
 
@@ -280,9 +297,9 @@ func (c *Client) doRequest(ctx context.Context, method, url string, body []byte)
 	}
 
 	if c.verbose {
-		fmt.Printf("← %d %s\n", resp.StatusCode, resp.Status)
+		fmt.Fprintf(os.Stderr, "← %d %s\n", resp.StatusCode, resp.Status)
 		if len(respBody) > 0 {
-			fmt.Printf("← Body: %s\n", string(respBody))
+			fmt.Fprintf(os.Stderr, "← Body: %s\n", string(respBody))
 		}
 	}
 
