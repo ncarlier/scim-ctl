@@ -7,9 +7,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/idf-educ/idm/scim-ctl/pkg/config"
 	"github.com/idf-educ/idm/scim-ctl/pkg/scim"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -26,8 +26,8 @@ var updateCmd = &cobra.Command{
 via the --data flag or through STDIN.
 
 Examples:
-  scim-ctl update --resource-type user --id 1234 --data '{"userName": "johndoe"}'
-  cat user.json | scim-ctl update -t user --id 1234`,
+  scim-ctl update --resource user --id 1234 --data '{"userName": "johndoe"}'
+  cat user.json | scim-ctl update -r user --id 1234`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Get()
 		if err != nil {
@@ -86,10 +86,10 @@ Examples:
 
 func init() {
 	rootCmd.AddCommand(updateCmd)
-	
-	updateCmd.Flags().StringVarP(&updateResourceType, "resource-type", "t", "", "SCIM resource type (required)")
+
+	updateCmd.Flags().StringVarP(&updateResourceType, "resource", "r", "", "SCIM resource type (required)")
 	updateCmd.Flags().StringVar(&updateID, "id", "", "SCIM resource identifier (required)")
 	updateCmd.Flags().StringVarP(&updateData, "data", "d", "", "SCIM resource payload (JSON)")
-	updateCmd.MarkFlagRequired("resource-type")
+	updateCmd.MarkFlagRequired("resource")
 	updateCmd.MarkFlagRequired("id")
 }

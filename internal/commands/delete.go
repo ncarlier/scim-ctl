@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/idf-educ/idm/scim-ctl/pkg/config"
 	"github.com/idf-educ/idm/scim-ctl/pkg/scim"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -21,8 +21,8 @@ var deleteCmd = &cobra.Command{
 	Long: `Delete a SCIM resource by its unique identifier.
 
 Examples:
-  scim-ctl delete --resource-type user --id 1234
-  scim-ctl delete -t group --id abcd-efgh-ijkl`,
+  scim-ctl delete --resource user --id 1234
+  scim-ctl delete -r group --id abcd-efgh-ijkl`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Get()
 		if err != nil {
@@ -51,9 +51,9 @@ Examples:
 
 func init() {
 	rootCmd.AddCommand(deleteCmd)
-	
-	deleteCmd.Flags().StringVarP(&deleteResourceType, "resource-type", "t", "", "SCIM resource type (required)")
+
+	deleteCmd.Flags().StringVarP(&deleteResourceType, "resource", "r", "", "SCIM resource type (required)")
 	deleteCmd.Flags().StringVar(&deleteID, "id", "", "SCIM resource identifier (required)")
-	deleteCmd.MarkFlagRequired("resource-type")
+	deleteCmd.MarkFlagRequired("resource")
 	deleteCmd.MarkFlagRequired("id")
 }

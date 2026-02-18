@@ -23,10 +23,10 @@ var getCmd = &cobra.Command{
 	Long: `Retrieve a SCIM resource by its unique identifier.
 
 Examples:
-  scim-ctl get --resource-type user --id 1234
-  scim-ctl get -t group --id abcd-efgh-ijkl
-  scim-ctl get -t user --id 1234 --attributes userName,emails
-  scim-ctl get -t user --id 1234 --attributes userName --attributes emails`,
+  scim-ctl get --resource user --id 1234
+  scim-ctl get -r group --id abcd-efgh-ijkl
+  scim-ctl get -r user --id 1234 --attributes userName,emails
+  scim-ctl get -r user --id 1234 --attributes userName --attributes emails`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Get()
 		if err != nil {
@@ -63,9 +63,9 @@ Examples:
 func init() {
 	rootCmd.AddCommand(getCmd)
 
-	getCmd.Flags().StringVarP(&getResourceType, "resource-type", "t", "", "SCIM resource type (required)")
+	getCmd.Flags().StringVarP(&getResourceType, "resource", "r", "", "SCIM resource type (required)")
 	getCmd.Flags().StringVar(&getID, "id", "", "SCIM resource identifier (required)")
 	getCmd.Flags().StringSliceVarP(&getAttributes, "attributes", "a", []string{}, "Comma-separated list of attributes to return")
-	getCmd.MarkFlagRequired("resource-type")
+	getCmd.MarkFlagRequired("resource")
 	getCmd.MarkFlagRequired("id")
 }

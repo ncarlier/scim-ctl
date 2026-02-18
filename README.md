@@ -63,18 +63,18 @@ scim-ctl schemas
 Create a SCIM resource.
 
 ```bash
-scim-ctl create --resource-type user --data '{"userName": "jdoe", ...}'
+scim-ctl create --resource user --data '{"userName": "jdoe", ...}'
 ```
 
 | Parameter         | Alias | Description                 |
 | ----------------- | ----- | --------------------------- |
-| `--resource-type` | `-t`  | SCIM resource type          |
+| `--resource`       | `-r`  | SCIM resource type          |
 | `--data`          | `-d`  | SCIM resource payload       |
 
 Data can also be provided via STDIN:
 
 ```bash
-cat user.json | scim-ctl create -t user
+cat user.json | scim-ctl create -r user
 ```
 
 ### Read (`get`)
@@ -82,26 +82,26 @@ cat user.json | scim-ctl create -t user
 Retrieve a resource by ID.
 
 ```bash
-scim-ctl get --resource-type user --id 1234
+scim-ctl get --resource user --id 1234
 ```
 
 | Parameter         | Alias | Description                     |
 | ----------------- | ----- | ------------------------------- |
 | `--id`            | n/a   | SCIM resource identifier        |
-| `--resource-type` | `-t`  | SCIM resource type              |
+| `--resource`      | `-r`  | SCIM resource type              |
 
 ### Update (`update`)
 
 Update an existing resource.
 
 ```bash
-scim-ctl update --resource-type user --id 1234 --data '{"userName": "johndoe"}'
+scim-ctl update --resource user --id 1234 --data '{"userName": "johndoe"}'
 ```
 
 | Parameter         | Alias | Description                     |
 | ----------------- | ----- | ------------------------------- |
 | `--id`            | n/a   | SCIM resource identifier        |
-| `--resource-type` | `-t`  | SCIM resource type              |
+| `--resource`      | `-r`  | SCIM resource type              |
 | `--data`          | `-d`  | SCIM resource payload           |
 
 ### Delete (`delete`)
@@ -109,26 +109,26 @@ scim-ctl update --resource-type user --id 1234 --data '{"userName": "johndoe"}'
 Delete a SCIM resource.
 
 ```bash
-scim-ctl delete --resource-type user --id 1234
+scim-ctl delete --resource user --id 1234
 ```
 
 | Parameter         | Alias | Description                     |
 | ----------------- | ----- | ------------------------------- |
 | `--id`            | n/a   | SCIM resource identifier        |
-| `--resource-type` | `-t`  | SCIM resource type              |
+| `--resource`      | `-r`  | SCIM resource type              |
 
 ### Search (`search`)
 
 Search SCIM resources.
 
 ```bash
-scim-ctl search --resource-type user --filter 'userName eq "bob"'
-scim-ctl search -t user -q "john doe"
+scim-ctl search --resource user --filter 'userName eq "bob"'
+scim-ctl search -r user -q "john doe"
 ```
 
 | Parameter          | Alias | Description                                    |
 | ------------------ | ----- | ---------------------------------------------- |
-| `--resource-type`  | `-t`  | SCIM resource type                             |
+| `--resource`       | `-r`  | SCIM resource type                             |
 | `--filter`         | `-f`  | SCIM filter expression                         |
 | `--query`          | `-q`  | Full-text search query (out of SCIM spec)      |
 | `--start-index`    | `-s`  | Paginations start index                        |
@@ -149,13 +149,13 @@ The `examples/` directory contains comprehensive SCIM JSON examples and detailed
 
 ```bash
 # Create a user from example template
-scim-ctl create -t user -d @examples/users/basic-user.json
+scim-ctl create -r user -d @examples/users/basic-user.json
 
 # Search for active users  
-scim-ctl search -t user -f 'active eq true'
+scim-ctl search -r user -f 'active eq true'
 
 # Add email to user using PATCH
-scim-ctl patch -t user --id USER_ID -d @examples/patches/user-add-email.json
+scim-ctl patch -r user --id USER_ID -d @examples/patches/user-add-email.json
 ```
 
 For detailed usage instructions and more examples, see the [Examples README](examples/README.md).

@@ -7,9 +7,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/idf-educ/idm/scim-ctl/pkg/config"
 	"github.com/idf-educ/idm/scim-ctl/pkg/scim"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -25,8 +25,8 @@ var createCmd = &cobra.Command{
 via the --data flag or through STDIN.
 
 Examples:
-  scim-ctl create --resource-type user --data '{"userName": "jdoe", "emails": [{"value": "jdoe@example.com"}]}'
-  cat user.json | scim-ctl create -t user`,
+  scim-ctl create --resource user --data '{"userName": "jdoe", "emails": [{"value": "jdoe@example.com"}]}'
+  cat user.json | scim-ctl create -r user`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Get()
 		if err != nil {
@@ -85,8 +85,8 @@ Examples:
 
 func init() {
 	rootCmd.AddCommand(createCmd)
-	
-	createCmd.Flags().StringVarP(&createResourceType, "resource-type", "t", "", "SCIM resource type (required)")
+
+	createCmd.Flags().StringVarP(&createResourceType, "resource", "r", "", "SCIM resource type (required)")
 	createCmd.Flags().StringVarP(&createData, "data", "d", "", "SCIM resource payload (JSON)")
-	createCmd.MarkFlagRequired("resource-type")
+	createCmd.MarkFlagRequired("resource")
 }

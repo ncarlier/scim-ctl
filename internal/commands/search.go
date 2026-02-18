@@ -28,13 +28,13 @@ var searchCmd = &cobra.Command{
 	Long: `Search for SCIM resources using SCIM filter expressions.
 
 Examples:
-  scim-ctl search --resource-type user --filter 'userName eq "bob"'
-  scim-ctl search -t user -q "john doe"
-  scim-ctl search -t group -f 'displayName co "admin"' --start-index 1 --items-per-page 10
-  scim-ctl search -t user -f 'active eq true' --sort-by userName --sort-order ascending
-  scim-ctl search -t user --sort-by meta.created --sort-order descending
-  scim-ctl search -t user -f 'active eq true' --attributes userName,emails
-  scim-ctl search -t user --attributes userName --attributes emails`,
+  scim-ctl search --resource user --filter 'userName eq "bob"'
+  scim-ctl search -r user -q "john doe"
+  scim-ctl search -r group -f 'displayName co "admin"' --start-index 1 --items-per-page 10
+  scim-ctl search -r user -f 'active eq true' --sort-by userName --sort-order ascending
+  scim-ctl search -r user --sort-by meta.created --sort-order descending
+  scim-ctl search -r user -f 'active eq true' --attributes userName,emails
+  scim-ctl search -r user --attributes userName --attributes emails`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Get()
 		if err != nil {
@@ -71,7 +71,7 @@ Examples:
 func init() {
 	rootCmd.AddCommand(searchCmd)
 
-	searchCmd.Flags().StringVarP(&searchResourceType, "resource-type", "t", "", "SCIM resource type (required)")
+	searchCmd.Flags().StringVarP(&searchResourceType, "resource", "r", "", "SCIM resource type (required)")
 	searchCmd.Flags().StringVarP(&searchFilter, "filter", "f", "", "SCIM filter expression")
 	searchCmd.Flags().StringVarP(&searchQuery, "query", "q", "", "Full-text search query (custom extension)")
 	searchCmd.Flags().IntVarP(&searchStartIndex, "start-index", "s", 0, "Pagination start index")
@@ -79,5 +79,5 @@ func init() {
 	searchCmd.Flags().StringVar(&searchSortBy, "sort-by", "", "Attribute to sort by (e.g., userName, meta.created)")
 	searchCmd.Flags().StringVar(&searchSortOrder, "sort-order", "", "Sort order: ascending or descending")
 	searchCmd.Flags().StringSliceVarP(&searchAttributes, "attributes", "a", []string{}, "Comma-separated list of attributes to return")
-	searchCmd.MarkFlagRequired("resource-type")
+	searchCmd.MarkFlagRequired("resource")
 }

@@ -122,7 +122,7 @@ create_user() {
     fi
     
     log_info "Creating user..."
-    run_scim_ctl create -t user -d "$data"
+    run_scim_ctl create -r user -d "$data"
 }
 
 get_user() {
@@ -134,7 +134,7 @@ get_user() {
     fi
     
     log_info "Retrieving user: $user_id"
-    run_scim_ctl get -t user --id "$user_id"
+    run_scim_ctl get -r user --id "$user_id"
 }
 
 search_users() {
@@ -144,9 +144,9 @@ search_users() {
     
     log_info "Searching users..."
     if [[ -n "$filter" ]]; then
-        run_scim_ctl search -t user -q "$filter" -s "$start_index" -i "$count"
+        run_scim_ctl search -r user -q "$filter" -s "$start_index" -i "$count"
     else
-        run_scim_ctl search -t user -s "$start_index" -i "$count"
+        run_scim_ctl search -r user -s "$start_index" -i "$count"
     fi
 }
 
@@ -160,7 +160,7 @@ update_user() {
     fi
     
     log_info "Updating user: $user_id"
-    run_scim_ctl update -t user --id "$user_id" -d "$data"
+    run_scim_ctl update -r user --id "$user_id" -d "$data"
 }
 
 delete_user() {
@@ -174,7 +174,7 @@ delete_user() {
     read -p "Are you sure you want to delete user $user_id? (y/N): " confirm
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
         log_info "Deleting user: $user_id"
-        run_scim_ctl delete -t user --id "$user_id"
+        run_scim_ctl delete -r user --id "$user_id"
         log_success "User deleted"
     else
         log_info "Deletion cancelled"
@@ -311,7 +311,7 @@ EXAMPLES:
     $0 update-user 12345 '{"userName": "johndoe"}'
     $0 delete-user 12345
     $0 interactive
-    $0 exec create -t group -d '{"displayName": "Admins"}'
+    $0 exec create -r group -d '{"displayName": "Admins"}'
 
 ENVIRONMENT:
     The script looks for configuration in:
