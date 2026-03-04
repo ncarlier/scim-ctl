@@ -27,10 +27,12 @@ func titleCase(s string) string {
 
 // Client represents a SCIM client
 type Client struct {
-	baseURL     string
-	httpClient  *http.Client
-	accessToken string
-	verbose     bool
+	baseURL       string
+	httpClient    *http.Client
+	accessToken   string
+	verbose       bool
+	authenticator *auth.Authenticator
+	authConfig    *auth.DeviceFlowConfig
 }
 
 // Resource represents a generic SCIM resource
@@ -95,6 +97,8 @@ func (c *Client) Authenticate(ctx context.Context, cfg *config.Config) error {
 	}
 
 	c.accessToken = accessToken
+	c.authenticator = authenticator
+	c.authConfig = authConfig
 	return nil
 }
 
@@ -260,6 +264,62 @@ func (c *Client) SearchResources(ctx context.Context, resourceType string, filte
 
 // doRequest performs an HTTP request with proper headers and error handling
 func (c *Client) doRequest(ctx context.Context, method, url string, body []byte) ([]byte, error) {
+	// 1. Ensure we have a valid access token before making the request
+	if c.authenticator != nil {
+		accessToken, err := c.authenticator.GetAccessTokenSilent(ctx, c.verbose)
+		if err != nil {
+			if c.verbose {
+				fmt.Fprintf(os.Stderr, "Failed to silently renew access token: %v\n", err)
+			}
+			// We continue with the current token, the call will likely fail with 401
+			// which we handle below.
+		} else {
+			c.accessToken = accessToken
+		}
+	}
+
+	// 2. Perform the initial request
+	respBody, statusCode, status, err := c.performHTTPRequest(ctx, method, url, body)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Handle 401 Unauthorized by clearing cache and retrying once
+	if statusCode == http.StatusUnauthorized && c.authenticator != nil {
+		if c.verbose {
+			fmt.Fprintf(os.Stderr, "Received 401 Unauthorized, clearing token cache and retrying...\n")
+		}
+
+		// Clear cache to remove the invalid token
+		c.authenticator.ClearCache(c.verbose)
+
+		// Try to get a new token silently (using refresh token if available)
+		accessToken, err := c.authenticator.GetAccessTokenSilent(ctx, c.verbose)
+		if err == nil {
+			c.accessToken = accessToken
+			// Retry the request with the new token
+			respBody, statusCode, status, err = c.performHTTPRequest(ctx, method, url, body)
+			if err != nil {
+				return nil, err
+			}
+		} else if c.verbose {
+			fmt.Fprintf(os.Stderr, "Silent token renewal failed after 401: %v\n", err)
+		}
+	}
+
+	// 4. Handle error responses
+	if statusCode >= 400 {
+		var errorResp ErrorResponse
+		if err := json.Unmarshal(respBody, &errorResp); err == nil && errorResp.Detail != "" {
+			return nil, fmt.Errorf("SCIM error (%d): %s", statusCode, errorResp.Detail)
+		}
+		return nil, fmt.Errorf("HTTP error %d: %s", statusCode, status)
+	}
+	return respBody, nil
+}
+
+// performHTTPRequest is a helper that carries out the actual HTTP request
+func (c *Client) performHTTPRequest(ctx context.Context, method, url string, body []byte) ([]byte, int, string, error) {
 	var bodyReader io.Reader
 	if body != nil {
 		bodyReader = bytes.NewReader(body)
@@ -267,13 +327,12 @@ func (c *Client) doRequest(ctx context.Context, method, url string, body []byte)
 
 	req, err := http.NewRequestWithContext(ctx, method, url, bodyReader)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return nil, 0, "", fmt.Errorf("failed to create request: %w", err)
 	}
 
 	// Set headers
 	req.Header.Set("Accept", "application/scim+json")
 	req.Header.Set("Content-Type", "application/scim+json")
-
 	if c.accessToken != "" {
 		req.Header.Set("Authorization", "Bearer "+c.accessToken)
 	}
@@ -287,13 +346,13 @@ func (c *Client) doRequest(ctx context.Context, method, url string, body []byte)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
+		return nil, 0, "", fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return nil, resp.StatusCode, resp.Status, fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	if c.verbose {
@@ -303,14 +362,5 @@ func (c *Client) doRequest(ctx context.Context, method, url string, body []byte)
 		}
 	}
 
-	// Handle error responses
-	if resp.StatusCode >= 400 {
-		var errorResp ErrorResponse
-		if err := json.Unmarshal(respBody, &errorResp); err == nil && errorResp.Detail != "" {
-			return nil, fmt.Errorf("SCIM error (%d): %s", resp.StatusCode, errorResp.Detail)
-		}
-		return nil, fmt.Errorf("HTTP error %d: %s", resp.StatusCode, resp.Status)
-	}
-
-	return respBody, nil
+	return respBody, resp.StatusCode, resp.Status, nil
 }
