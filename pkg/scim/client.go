@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"os"
 	"strings"
@@ -19,10 +20,14 @@ import (
 	"github.com/idf-educ/idm/scim-ctl/pkg/config"
 )
 
-// titleCase converts a string to title case using proper Unicode handling
-func titleCase(s string) string {
-	caser := cases.Title(language.English)
-	return caser.String(s)
+// Convert ressource type to SCIM resource name.
+func ressourceName(resourceType string) string {
+	result := cases.Title(language.English).String(resourceType)
+	result = strings.ReplaceAll(result, "-", "")
+	if result != "Me" {
+		return result + "s"
+	}
+	return result
 }
 
 // Client represents a SCIM client
@@ -136,7 +141,7 @@ func (c *Client) GetResourceTypes(ctx context.Context) ([]Resource, error) {
 
 // CreateResource creates a SCIM resource
 func (c *Client) CreateResource(ctx context.Context, resourceType string, data Resource) (Resource, error) {
-	url := c.baseURL + "/" + titleCase(resourceType) + "s"
+	url := c.baseURL + "/" + ressourceName(resourceType)
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -158,7 +163,10 @@ func (c *Client) CreateResource(ctx context.Context, resourceType string, data R
 
 // GetResource retrieves a SCIM resource by ID
 func (c *Client) GetResource(ctx context.Context, resourceType, id string, attributes []string) (Resource, error) {
-	baseURL := c.baseURL + "/" + titleCase(resourceType) + "s/" + id
+	baseURL := c.baseURL + "/" + ressourceName(resourceType)
+	if id != "" {
+		baseURL += "/" + id
+	}
 
 	u, err := url.Parse(baseURL)
 	if err != nil {
@@ -187,7 +195,7 @@ func (c *Client) GetResource(ctx context.Context, resourceType, id string, attri
 
 // UpdateResource updates a SCIM resource
 func (c *Client) UpdateResource(ctx context.Context, resourceType, id string, data Resource) (Resource, error) {
-	url := c.baseURL + "/" + titleCase(resourceType) + "s/" + id
+	url := c.baseURL + "/" + ressourceName(resourceType) + "/" + id
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -209,7 +217,7 @@ func (c *Client) UpdateResource(ctx context.Context, resourceType, id string, da
 
 // DeleteResource deletes a SCIM resource
 func (c *Client) DeleteResource(ctx context.Context, resourceType, id string) error {
-	url := c.baseURL + "/" + titleCase(resourceType) + "s/" + id
+	url := c.baseURL + "/" + ressourceName(resourceType) + "/" + id
 
 	_, err := c.doRequest(ctx, "DELETE", url, nil)
 	return err
@@ -217,7 +225,7 @@ func (c *Client) DeleteResource(ctx context.Context, resourceType, id string) er
 
 // SearchResources searches SCIM resources
 func (c *Client) SearchResources(ctx context.Context, resourceType string, filter string, query string, startIndex, count int, sortBy, sortOrder string, attributes []string) (*ListResponse, error) {
-	baseURL := c.baseURL + "/" + titleCase(resourceType) + "s"
+	baseURL := c.baseURL + "/" + ressourceName(resourceType)
 
 	// Use URL parameters for GET request
 	u, err := url.Parse(baseURL)
@@ -320,7 +328,7 @@ func (c *Client) doRequest(ctx context.Context, method, url string, body []byte)
 
 // performHTTPRequest is a helper that carries out the actual HTTP request
 func (c *Client) performHTTPRequest(ctx context.Context, method, url string, body []byte) ([]byte, int, string, error) {
-	var bodyReader io.Reader
+	var bodyReader io.Reader = http.NoBody
 	if body != nil {
 		bodyReader = bytes.NewReader(body)
 	}
@@ -332,7 +340,9 @@ func (c *Client) performHTTPRequest(ctx context.Context, method, url string, bod
 
 	// Set headers
 	req.Header.Set("Accept", "application/scim+json")
-	req.Header.Set("Content-Type", "application/scim+json")
+	if method == "POST" || method == "PUT" || method == "PATCH" {
+		req.Header.Set("Content-Type", "application/scim+json")
+	}
 	if c.accessToken != "" {
 		req.Header.Set("Authorization", "Bearer "+c.accessToken)
 	}
@@ -341,6 +351,13 @@ func (c *Client) performHTTPRequest(ctx context.Context, method, url string, bod
 		fmt.Fprintf(os.Stderr, "→ %s %s\n", method, url)
 		if body != nil {
 			fmt.Fprintf(os.Stderr, "→ Body: %s\n", string(body))
+		}
+	}
+
+	if c.verbose {
+		dump, err := httputil.DumpRequest(req, true)
+		if err == nil {
+			fmt.Fprintf(os.Stderr, "→ Request Dump:\n%s\n", dump)
 		}
 	}
 
@@ -356,9 +373,11 @@ func (c *Client) performHTTPRequest(ctx context.Context, method, url string, bod
 	}
 
 	if c.verbose {
-		fmt.Fprintf(os.Stderr, "← %d %s\n", resp.StatusCode, resp.Status)
-		if len(respBody) > 0 {
-			fmt.Fprintf(os.Stderr, "← Body: %s\n", string(respBody))
+		dump, err := httputil.DumpResponse(resp, true)
+		if err == nil {
+			fmt.Fprintf(os.Stderr, "← %d %s\n", resp.StatusCode, resp.Status)
+		} else {
+			fmt.Fprintf(os.Stderr, "→ Request Dump:\n%s\n", dump)
 		}
 	}
 
