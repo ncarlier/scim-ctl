@@ -319,6 +319,23 @@ scim-ctl groups delete GROUP_ID
 ./scim.sh delete-group GROUP_ID
 ```
 
+### Exporting Resources
+
+#### Export Users as JSON Lines
+```bash
+# Export all users to a JSONL file
+scim-ctl export -r user > all_users.jsonl
+
+# Export active users only
+scim-ctl export -r user -f 'active eq true' > active_users.jsonl
+```
+
+#### Export Groups
+```bash
+# Export all groups
+scim-ctl export -r group > all_groups.jsonl
+```
+
 ## Authentication and Caching
 
 ### Token Management

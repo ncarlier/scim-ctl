@@ -134,6 +134,22 @@ scim-ctl search -r user -q "john doe"
 | `--start-index`    | `-s`  | Paginations start index                        |
 | `--items-per-page` | `-i`  | Paginations size                               |
 
+### Export (`export`)
+
+Export all SCIM resources as JSON Lines text format. Pagination is handled automatically.
+
+```bash
+scim-ctl export --resource user --filter 'userName eq "bob"'
+scim-ctl export -r group -f 'displayName co "admin"' --items-per-page 100
+```
+
+| Parameter          | Alias | Description                                    |
+| ------------------ | ----- | ---------------------------------------------- |
+| `--resource`       | `-r`  | SCIM resource type                             |
+| `--filter`         | `-f`  | SCIM filter expression                         |
+| `--query`          | `-q`  | Full-text search query (out of SCIM spec)      |
+| `--items-per-page` | `-i`  | Paginations size                               |
+
 ## Examples and Usage Guides
 
 The `examples/` directory contains comprehensive SCIM JSON examples and detailed usage instructions:
