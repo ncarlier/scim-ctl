@@ -193,8 +193,8 @@ func (c *Client) GetResource(ctx context.Context, resourceType, id string, attri
 	return resource, nil
 }
 
-// UpdateResource updates a SCIM resource
-func (c *Client) UpdateResource(ctx context.Context, resourceType, id string, data Resource) (Resource, error) {
+// ReplaceResource replaces a SCIM resource
+func (c *Client) ReplaceResource(ctx context.Context, resourceType, id string, data Resource) (Resource, error) {
 	url := c.baseURL + "/" + ressourceName(resourceType) + "/" + id
 
 	jsonData, err := json.Marshal(data)

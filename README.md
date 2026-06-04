@@ -90,12 +90,12 @@ scim-ctl get --resource user --id 1234
 | `--id`            | n/a   | SCIM resource identifier        |
 | `--resource`      | `-r`  | SCIM resource type              |
 
-### Update (`update`)
+### Replace (`replace`)
 
-Update an existing resource.
+Replace an existing resource.
 
 ```bash
-scim-ctl update --resource user --id 1234 --data '{"userName": "johndoe"}'
+scim-ctl replace --resource user --id 1234 --data '{"userName": "johndoe"}'
 ```
 
 | Parameter         | Alias | Description                     |
@@ -157,8 +157,8 @@ The `examples/` directory contains comprehensive SCIM JSON examples and detailed
 - **[examples/README.md](examples/README.md)** - Complete usage guide with CLI command examples
 - **examples/users/** - User resource creation and management examples  
 - **examples/groups/** - Group resource examples with member management
-- **examples/updates/** - Full resource update examples (PUT operations)
-- **examples/patches/** - PATCH operation examples for fine-grained updates
+- **examples/replaces/** - Full resource replace examples (PUT operations)
+- **examples/patches/** - PATCH operation examples for fine-grained replaces
 - **examples/filters/** - Search filter patterns and examples
 
 ### Quick Start with Examples

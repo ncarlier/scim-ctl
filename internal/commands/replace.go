@@ -13,21 +13,21 @@ import (
 )
 
 var (
-	updateResourceType string
-	updateID           string
-	updateData         string
+	replaceResourceType string
+	replaceID           string
+	replaceData         string
 )
 
-// updateCmd represents the update command
-var updateCmd = &cobra.Command{
-	Use:   "update",
-	Short: "Update an existing resource",
-	Long: `Update an existing SCIM resource. The resource data can be provided
+// replaceCmd represents the replace command
+var replaceCmd = &cobra.Command{
+	Use:   "replace",
+	Short: "Replace an existing resource",
+	Long: `Replace an existing SCIM resource. The resource data can be provided
 via the --data flag or through STDIN.
 
 Examples:
-  scim-ctl update --resource user --id 1234 --data '{"userName": "johndoe"}'
-  cat user.json | scim-ctl update -r user --id 1234`,
+  scim-ctl replace --resource user --id 1234 --data '{"userName": "johndoe"}'
+  cat user.json | scim-ctl replace -r user --id 1234`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Get()
 		if err != nil {
@@ -46,8 +46,8 @@ Examples:
 
 		// Get data from flag or STDIN
 		var dataStr string
-		if updateData != "" {
-			dataStr = updateData
+		if replaceData != "" {
+			dataStr = replaceData
 		} else {
 			// Read from STDIN
 			stdinData, err := io.ReadAll(os.Stdin)
@@ -67,14 +67,14 @@ Examples:
 			return fmt.Errorf("invalid JSON data: %w", err)
 		}
 
-		// Update the resource
-		updatedResource, err := client.UpdateResource(ctx, updateResourceType, updateID, resourceData)
+		// Replace the resource
+		replacedResource, err := client.ReplaceResource(ctx, replaceResourceType, replaceID, resourceData)
 		if err != nil {
-			return fmt.Errorf("failed to update resource: %w", err)
+			return fmt.Errorf("failed to replace resource: %w", err)
 		}
 
 		// Pretty print the result
-		jsonData, err := json.MarshalIndent(updatedResource, "", "  ")
+		jsonData, err := json.MarshalIndent(replacedResource, "", "  ")
 		if err != nil {
 			return fmt.Errorf("failed to marshal response: %w", err)
 		}
@@ -85,11 +85,11 @@ Examples:
 }
 
 func init() {
-	rootCmd.AddCommand(updateCmd)
+	rootCmd.AddCommand(replaceCmd)
 
-	updateCmd.Flags().StringVarP(&updateResourceType, "resource", "r", "", "SCIM resource type (required)")
-	updateCmd.Flags().StringVar(&updateID, "id", "", "SCIM resource identifier (required)")
-	updateCmd.Flags().StringVarP(&updateData, "data", "d", "", "SCIM resource payload (JSON)")
-	updateCmd.MarkFlagRequired("resource")
-	updateCmd.MarkFlagRequired("id")
+	replaceCmd.Flags().StringVarP(&replaceResourceType, "resource", "r", "", "SCIM resource type (required)")
+	replaceCmd.Flags().StringVar(&replaceID, "id", "", "SCIM resource identifier (required)")
+	replaceCmd.Flags().StringVarP(&replaceData, "data", "d", "", "SCIM resource payload (JSON)")
+	replaceCmd.MarkFlagRequired("resource")
+	replaceCmd.MarkFlagRequired("id")
 }

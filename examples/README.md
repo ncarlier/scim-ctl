@@ -8,7 +8,7 @@ This directory contains comprehensive examples for SCIM (System for Cross-domain
 examples/
 ├── users/           # User resource examples
 ├── groups/          # Group resource examples  
-├── updates/         # Full resource update examples
+├── replaces/         # Full resource update examples
 ├── patches/         # PATCH operation examples
 ├── filters/         # Search filter examples
 └── README.md        # This file
@@ -27,15 +27,10 @@ Before using these examples, ensure you have:
 Set up your environment variables or configuration file:
 
 ```bash
-export SCIM_SERVER_URL="https://your-scim-server.com/v2"
-export OAUTH_ISSUER="https://your-oauth-provider.com"
-export OAUTH_CLIENT_ID="your-client-id"
-export OAUTH_SCOPES="scim:read scim:write"
-```
-
-Or use the interactive bash script:
-```bash
-./scim.sh config
+export SCIM_CTL_TARGET="https://your-scim-server.com/v2"
+export SCIM_CTL_OIDC_ISSUER="https://your-oauth-provider.com"
+export SCIM_CTL_OIDC_CLIENT_ID="your-client-id"
+export SCIM_CTL_OIDC_CLIENT_SECRET="your-client-secret"
 ```
 
 ## User Examples
@@ -43,53 +38,33 @@ Or use the interactive bash script:
 ### Creating Users
 
 #### Basic User Creation
+
 ```bash
 # Create a simple user with minimal required fields
-scim-ctl users create -f examples/users/basic-user.json
-
-# Using the bash script
-./scim.sh create-user examples/users/basic-user.json
+cat examples/users/basic-user.json | scim-ctl create -r user
 ```
 
 #### Complete User with All Fields
+
 ```bash
 # Create a user with comprehensive profile information
-scim-ctl users create -f examples/users/complete-user.json
+cat examples/users/complete-user.json | scim-ctl create -r user
 ```
 
 #### Enterprise User
+
 ```bash
 # Create a user with enterprise extension attributes
-scim-ctl users create -f examples/users/enterprise-user.json
+cat examples/users/enterprise-user.json | scim-ctl create -r user
 ```
 
-#### Contractor User
-```bash
-# Create a contractor user with specific attributes
-scim-ctl users create -f examples/users/contractor-user.json
-```
+### User Replaces
 
-### User Updates
+#### Full User Replace
 
-#### Full User Update
 ```bash
 # Replace entire user resource (PUT operation)
-scim-ctl users update USER_ID -f examples/updates/user-full-update.json
-
-# Using bash script
-./scim.sh update-user USER_ID examples/updates/user-full-update.json
-```
-
-#### Partial User Update  
-```bash
-# Update only specified fields
-scim-ctl users update USER_ID -f examples/updates/user-partial-update.json
-```
-
-#### User Deactivation
-```bash
-# Deactivate a user account
-scim-ctl users update USER_ID -f examples/updates/user-deactivate.json
+cat examples/replaces/user-full-replace.json | scim-ctl replace -r user USER_ID
 ```
 
 ### User Patches (Fine-grained Updates)
@@ -97,46 +72,49 @@ scim-ctl users update USER_ID -f examples/updates/user-deactivate.json
 #### Add Email Address
 ```bash
 # Add a new email to user's profile
-scim-ctl users patch USER_ID -f examples/patches/user-add-email.json
-
-# Using bash script  
-./scim.sh patch-user USER_ID examples/patches/user-add-email.json
+cat examples/patches/user-add-email.json | scim-ctl patch -r user USER_ID
 ```
 
 #### Update Name
+
 ```bash
 # Change user's given and family names
-scim-ctl users patch USER_ID -f examples/patches/user-update-name.json
+cat examples/patches/user-update-name.json | scim-ctl patch -r user USER_ID
 ```
 
 #### Remove Email
+
 ```bash  
 # Remove specific email address using filter
-scim-ctl users patch USER_ID -f examples/patches/user-remove-email.json
+cat examples/patches/user-remove-email.json | scim-ctl patch -r user USER_ID
 ```
 
 #### Update Contact Information
+
 ```bash
 # Modify existing email and phone number
-scim-ctl users patch USER_ID -f examples/patches/user-update-contact.json
+cat examples/patches/user-update-contact.json | scim-ctl patch -r user USER_ID
 ```
 
 #### Enterprise Attributes Update
+
 ```bash
 # Update enterprise-specific attributes (department, manager, etc.)
-scim-ctl users patch USER_ID -f examples/patches/user-enterprise-update.json
+cat examples/patches/user-enterprise-update.json | scim-ctl patch -r user USER_ID
 ```
 
 #### Complex Multi-Operation Patch
+
 ```bash
 # Perform multiple operations in single request
-scim-ctl users patch USER_ID -f examples/patches/user-complex-update.json
+cat examples/patches/user-complex-update.json | scim-ctl patch -r user USER_ID
 ```
 
 #### Deactivate User
+
 ```bash
 # Deactivate user using PATCH operation
-scim-ctl users patch USER_ID -f examples/patches/user-deactivate.json
+cat examples/patches/user-deactivate.json | scim-ctl patch -r user USER_ID
 ```
 
 ## Group Examples
@@ -144,58 +122,48 @@ scim-ctl users patch USER_ID -f examples/patches/user-deactivate.json
 ### Creating Groups
 
 #### Basic Group
+
 ```bash
 # Create simple group with minimal fields
-scim-ctl groups create -f examples/groups/basic-group.json
-
-# Using bash script
-./scim.sh create-group examples/groups/basic-group.json
-```
-
-#### Team Group with Members
-```bash
-# Create group with initial members
-scim-ctl groups create -f examples/groups/team-group.json
+cat examples/groups/basic-group.json | scim-ctl create -r group
 ```
 
 #### Empty Group
 ```bash
 # Create group without members (to be added later)
-scim-ctl groups create -f examples/groups/empty-group.json
+cat examples/groups/empty-group.json | scim-ctl create -r group
 ```
 
-### Group Updates
+### Group Replaces
 
-#### Full Group Update
+#### Full Group Replace
+
 ```bash
 # Replace entire group resource
-scim-ctl groups update GROUP_ID -f examples/updates/group-update.json
-
-# Using bash script
-./scim.sh update-group GROUP_ID examples/updates/group-update.json
+cat examples/replaces/group-full-replace.json | scim-ctl replace -r group GROUP_ID
 ```
 
 ### Group Patches
 
 #### Add Members to Group
+
 ```bash
 # Add multiple members to existing group
-scim-ctl groups patch GROUP_ID -f examples/patches/group-add-members.json
-
-# Using bash script
-./scim.sh patch-group GROUP_ID examples/patches/group-add-members.json
+cat examples/patches/group-add-members.json | scim-ctl patch -r group GROUP_ID
 ```
 
 #### Remove Member from Group
+
 ```bash
 # Remove specific user from group
-scim-ctl groups patch GROUP_ID -f examples/patches/group-remove-member.json
+cat examples/patches/group-remove-member.json | scim-ctl patch -r group GROUP_ID
 ```
 
 #### Update Group Information
+
 ```bash
 # Change group display name and external ID
-scim-ctl groups patch GROUP_ID -f examples/patches/group-update-info.json
+cat examples/patches/group-update-info.json | scim-ctl patch -r group GROUP_ID
 ```
 
 ## Search and Filter Examples
@@ -203,34 +171,31 @@ scim-ctl groups patch GROUP_ID -f examples/patches/group-update-info.json
 ### User Searches
 
 #### Basic User Filters
+
 ```bash
 # Search by username
-scim-ctl users list --filter 'userName eq "john.doe@example.com"'
+scim-ctl search -r user --filter 'userName eq "john.doe@example.com"'
 
 # Search by email  
-scim-ctl users list --filter 'emails[value eq "john@example.com"]'
+scim-ctl search -r user --filter 'emails[value eq "john@example.com"]'
 
 # Search active users
-scim-ctl users list --filter 'active eq true'
+scim-ctl search -r user --filter 'active eq true'
 
 # Full-text search (out of SCIM spec)
 scim-ctl search -r user -q "john doe"
-
-# Using bash script with interactive mode
-./scim.sh
-# Then select: list-users
-# Enter filter: active eq true
 ```
 
 See `examples/filters/user-filters.txt` for more user filter examples.
 
 #### Advanced User Filters
+
 ```bash
 # Complex filter combinations
-scim-ctl users list --filter 'name.familyName co "Smith" and active eq true'
+scim-ctl search -r user --filter 'name.familyName co "Smith" and active eq true'
 
 # Enterprise extension filters
-scim-ctl users list --filter 'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department eq "Engineering"'
+scim-ctl search -r user --filter 'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department eq "Engineering"'
 
 # Combine full-text search with filters
 scim-ctl search -r user -f 'active eq true' -q "manager"
@@ -243,15 +208,10 @@ See `examples/filters/advanced-filters.txt` for complex filter examples.
 #### Basic Group Filters
 ```bash
 # Search by group name
-scim-ctl groups list --filter 'displayName eq "Developers"'
+scim-ctl search -r group --filter 'displayName eq "Developers"'
 
 # Search groups with specific member
-scim-ctl groups list --filter 'members[value eq "user123"]'
-
-# Using bash script
-./scim.sh
-# Select: list-groups  
-# Enter filter: displayName co "Team"
+scim-ctl search -r group --filter 'members[value eq "user123"]'
 ```
 
 See `examples/filters/group-filters.txt` for more group filter examples.
@@ -261,67 +221,56 @@ See `examples/filters/group-filters.txt` for more group filter examples.
 ### Retrieving Resources
 
 #### Get Single User
+
 ```bash
 # Retrieve user by ID
-scim-ctl users get USER_ID
-
-# Using bash script
-./scim.sh get-user USER_ID
+scim-ctl get -r user USER_ID
 ```
 
 #### Get Single Group
+
 ```bash  
 # Retrieve group by ID
-scim-ctl groups get GROUP_ID
-
-# Using bash script
-./scim.sh get-group GROUP_ID
+scim-ctl get -r group GROUP_ID
 ```
 
 #### List All Users
+
 ```bash
 # Get all users (paginated)
-scim-ctl users list
+scim-ctl search -r user list
 
 # With specific attributes
-scim-ctl users list --attributes "userName,emails,active"
-
-# Using bash script
-./scim.sh list-users
+scim-ctl search -r user list --attributes "userName,emails,active"
 ```
 
 #### List All Groups
+
 ```bash
 # Get all groups (paginated)  
-scim-ctl groups list
-
-# Using bash script
-./scim.sh list-groups
+scim-ctl search -r group
 ```
 
 ### Deleting Resources
 
 #### Delete User
+
 ```bash
 # Delete user by ID
-scim-ctl users delete USER_ID
-
-# Using bash script
-./scim.sh delete-user USER_ID
+scim-ctl delete -r user USER_ID
 ```
 
 #### Delete Group
+
 ```bash
 # Delete group by ID  
-scim-ctl groups delete GROUP_ID
-
-# Using bash script
-./scim.sh delete-group GROUP_ID
+scim-ctl delete -r group GROUP_ID
 ```
 
 ### Exporting Resources
 
 #### Export Users as JSON Lines
+
 ```bash
 # Export all users to a JSONL file
 scim-ctl export -r user > all_users.jsonl
@@ -331,6 +280,7 @@ scim-ctl export -r user -f 'active eq true' > active_users.jsonl
 ```
 
 #### Export Groups
+
 ```bash
 # Export all groups
 scim-ctl export -r group > all_groups.jsonl
@@ -339,6 +289,7 @@ scim-ctl export -r group > all_groups.jsonl
 ## Authentication and Caching
 
 ### Token Management
+
 ```bash  
 # View cached token information
 scim-ctl cache info
@@ -351,115 +302,11 @@ scim-ctl cache clear
 ./scim.sh cache-clear
 ```
 
-### Manual Authentication
-```bash
-# Force new device flow authentication
-scim-ctl auth login
-
-# Check current authentication status
-scim-ctl auth status
-```
-
-## Tips and Best Practices
-
-### 1. Testing with Dry Run
-Many commands support a `--dry-run` flag to preview operations without executing them:
-```bash
-scim-ctl users create -f examples/users/basic-user.json --dry-run
-```
-
-### 2. Output Formatting
-Control output format with `--output` flag:
-```bash
-scim-ctl users list --output json
-scim-ctl users list --output table
-scim-ctl users list --output yaml
-```
-
-### 3. Verbose Logging  
-Use `--verbose` for detailed HTTP request/response logging:
-```bash
-scim-ctl users list --verbose
-```
-
-### 4. Filtering Best Practices
-- Use quotes around filter expressions
-- Escape special characters properly  
-- Test filters with `--dry-run` first
-- Use `co` (contains) for partial matches, `eq` for exact matches
-
-### 5. Batch Operations
-For bulk operations, use the bash script's interactive mode or write custom scripts that iterate through the CLI commands.
-
-## Error Handling
-
-### Common Issues
-
-#### Authentication Errors
-```bash
-# Clear cache and re-authenticate
-scim-ctl cache clear
-scim-ctl auth login
-```
-
-#### Invalid JSON
-```bash
-# Validate JSON before submitting
-cat examples/users/basic-user.json | jq .
-```
-
-#### Network Issues
-```bash
-# Test connectivity
-curl -I $SCIM_SERVER_URL/Users
-```
-
 ### Debugging
+
 ```bash
 # Enable verbose logging for troubleshooting
-export SCIM_DEBUG=true
-scim-ctl users list --verbose
-```
-
-## Advanced Usage
-
-### Custom Attributes
-Extend examples with your organization's custom schema extensions by modifying the JSON files in each directory.
-
-### Bulk Operations
-Combine CLI commands with shell scripting for bulk operations:
-```bash
-# Bulk create users from CSV
-while IFS=, read -r username email firstname lastname; do
-    jq --arg un "$username" --arg em "$email" --arg fn "$firstname" --arg ln "$lastname" \
-       '.userName = $un | .emails[0].value = $em | .name.givenName = $fn | .name.familyName = $ln' \
-       examples/users/basic-user.json | \
-    scim-ctl users create -f -
-done < users.csv
-```
-
-### Integration with CI/CD
-Use the CLI in automation scripts:
-```bash
-#!/bin/bash
-# Automated user provisioning
-set -e
-
-# Authenticate  
-scim-ctl auth login
-
-# Create user
-USER_ID=$(scim-ctl users create -f user.json --output json | jq -r '.id')
-
-# Add to groups
-scim-ctl groups patch "$TEAM_GROUP_ID" -f <(echo '{
-  "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
-  "Operations": [{
-    "op": "add", 
-    "path": "members",
-    "value": [{"value": "'$USER_ID'"}]
-  }]
-}')
+scim-ctl --verbose search -r user
 ```
 
 ## Schema References
