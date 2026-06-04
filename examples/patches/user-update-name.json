@@ -1,20 +1,17 @@
-{
-  "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
-  "Operations": [
-    {
-      "op": "replace",
-      "path": "name.givenName",
-      "value": "Jane"
-    },
-    {
-      "op": "replace",
-      "path": "name.familyName", 
-      "value": "Smith"
-    },
-    {
-      "op": "replace",
-      "path": "displayName",
-      "value": "Jane Smith"
-    }
-  ]
-}
+[
+  {
+    "op": "replace",
+    "path": "name.givenName",
+    "value": "Jane"
+  },
+  {
+    "op": "replace",
+    "path": "name.familyName",
+    "value": "Smith"
+  },
+  {
+    "op": "replace",
+    "path": "displayName",
+    "value": "Jane Smith"
+  }
+]

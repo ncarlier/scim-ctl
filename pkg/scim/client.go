@@ -71,6 +71,13 @@ type SearchRequest struct {
 	ExcludedAttr []string `json:"excludedAttributes,omitempty"`
 }
 
+// PatchOperation represents a single SCIM patch operation
+type PatchOperation struct {
+	Op    string      `json:"op"`
+	Path  string      `json:"path,omitempty"`
+	Value interface{} `json:"value,omitempty"`
+}
+
 // NewClient creates a new SCIM client
 func NewClient(cfg *config.Config) (*Client, error) {
 	if err := cfg.Validate(); err != nil {
@@ -203,6 +210,33 @@ func (c *Client) ReplaceResource(ctx context.Context, resourceType, id string, d
 	}
 
 	resp, err := c.doRequest(ctx, "PUT", url, jsonData)
+	if err != nil {
+		return nil, err
+	}
+
+	var resource Resource
+	if err := json.Unmarshal(resp, &resource); err != nil {
+		return nil, fmt.Errorf("failed to decode resource response: %w", err)
+	}
+
+	return resource, nil
+}
+
+// UpdateResource updates a SCIM resource using PATCH
+func (c *Client) UpdateResource(ctx context.Context, resourceType, id string, operations []PatchOperation) (Resource, error) {
+	url := c.baseURL + "/" + ressourceName(resourceType) + "/" + id
+
+	payload := map[string]interface{}{
+		"schemas":    []string{"urn:ietf:params:scim:api:messages:2.0:PatchOp"},
+		"Operations": operations,
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal patch payload: %w", err)
+	}
+
+	resp, err := c.doRequest(ctx, "PATCH", url, jsonData)
 	if err != nil {
 		return nil, err
 	}

@@ -1,21 +1,18 @@
-{
-  "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
-  "Operations": [
-    {
-      "op": "add",
-      "path": "members",
-      "value": [
-        {
-          "value": "user123",
-          "$ref": "https://scim.example.com/v2/Users/user123",
-          "display": "John Doe"
-        },
-        {
-          "value": "user456", 
-          "$ref": "https://scim.example.com/v2/Users/user456",
-          "display": "Jane Smith"
-        }
-      ]
-    }
-  ]
-}
+[
+  {
+    "op": "add",
+    "path": "members",
+    "value": [
+      {
+        "value": "user123",
+        "$ref": "https://scim.example.com/v2/Users/user123",
+        "display": "John Doe"
+      },
+      {
+        "value": "user456", 
+        "$ref": "https://scim.example.com/v2/Users/user456",
+        "display": "Jane Smith"
+      }
+    ]
+  }
+]

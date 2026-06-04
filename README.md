@@ -104,6 +104,20 @@ scim-ctl replace --resource user --id 1234 --data '{"userName": "johndoe"}'
 | `--resource`      | `-r`  | SCIM resource type              |
 | `--data`          | `-d`  | SCIM resource payload           |
 
+### Update (`update`)
+
+Update an existing resource using a partial update (PATCH).
+
+```bash
+scim-ctl update --resource user --id 1234 --data '[{"op":"replace","path":"userName","value":"johndoe"}]'
+```
+
+| Parameter         | Alias | Description                     |
+| ----------------- | ----- | ------------------------------- |
+| `--id`            | n/a   | SCIM resource identifier        |
+| `--resource`      | `-r`  | SCIM resource type              |
+| `--data`          | `-d`  | SCIM operations payload (JSON array) |
+
 ### Delete (`delete`)
 
 Delete a SCIM resource.
@@ -171,7 +185,7 @@ scim-ctl create -r user -d @examples/users/basic-user.json
 scim-ctl search -r user -f 'active eq true'
 
 # Add email to user using PATCH
-scim-ctl patch -r user --id USER_ID -d @examples/patches/user-add-email.json
+scim-ctl update -r user --id USER_ID -d @examples/patches/user-add-email.json
 ```
 
 For detailed usage instructions and more examples, see the [Examples README](examples/README.md).

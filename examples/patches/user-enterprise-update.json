@@ -1,24 +1,21 @@
-{
-  "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
-  "Operations": [
-    {
-      "op": "add",
-      "path": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department",
-      "value": "Engineering"
-    },
-    {
-      "op": "replace",
-      "path": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:manager",
-      "value": {
-        "value": "mgr123",
-        "$ref": "https://scim.example.com/v2/Users/mgr123",
-        "displayName": "Alice Johnson"
-      }
-    },
-    {
-      "op": "replace",
-      "path": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:employeeNumber",
-      "value": "EMP-2024-001"
+[
+  {
+    "op": "add",
+    "path": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:department",
+    "value": "Engineering"
+  },
+  {
+    "op": "replace",
+    "path": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:manager",
+    "value": {
+      "value": "mgr123",
+      "$ref": "https://scim.example.com/v2/Users/mgr123",
+      "displayName": "Alice Johnson"
     }
-  ]
-}
+  },
+  {
+    "op": "replace",
+    "path": "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User:employeeNumber",
+    "value": "EMP-2024-001"
+  }
+]

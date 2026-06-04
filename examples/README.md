@@ -72,49 +72,49 @@ cat examples/replaces/user-full-replace.json | scim-ctl replace -r user USER_ID
 #### Add Email Address
 ```bash
 # Add a new email to user's profile
-cat examples/patches/user-add-email.json | scim-ctl patch -r user USER_ID
+cat examples/patches/user-add-email.json | scim-ctl update -r user USER_ID
 ```
 
 #### Update Name
 
 ```bash
 # Change user's given and family names
-cat examples/patches/user-update-name.json | scim-ctl patch -r user USER_ID
+cat examples/patches/user-update-name.json | scim-ctl update -r user USER_ID
 ```
 
 #### Remove Email
 
 ```bash  
 # Remove specific email address using filter
-cat examples/patches/user-remove-email.json | scim-ctl patch -r user USER_ID
+cat examples/patches/user-remove-email.json | scim-ctl update -r user USER_ID
 ```
 
 #### Update Contact Information
 
 ```bash
 # Modify existing email and phone number
-cat examples/patches/user-update-contact.json | scim-ctl patch -r user USER_ID
+cat examples/patches/user-update-contact.json | scim-ctl update -r user USER_ID
 ```
 
 #### Enterprise Attributes Update
 
 ```bash
 # Update enterprise-specific attributes (department, manager, etc.)
-cat examples/patches/user-enterprise-update.json | scim-ctl patch -r user USER_ID
+cat examples/patches/user-enterprise-update.json | scim-ctl update -r user USER_ID
 ```
 
 #### Complex Multi-Operation Patch
 
 ```bash
 # Perform multiple operations in single request
-cat examples/patches/user-complex-update.json | scim-ctl patch -r user USER_ID
+cat examples/patches/user-complex-update.json | scim-ctl update -r user USER_ID
 ```
 
 #### Deactivate User
 
 ```bash
 # Deactivate user using PATCH operation
-cat examples/patches/user-deactivate.json | scim-ctl patch -r user USER_ID
+cat examples/patches/user-deactivate.json | scim-ctl update -r user USER_ID
 ```
 
 ## Group Examples
@@ -149,21 +149,21 @@ cat examples/replaces/group-full-replace.json | scim-ctl replace -r group GROUP_
 
 ```bash
 # Add multiple members to existing group
-cat examples/patches/group-add-members.json | scim-ctl patch -r group GROUP_ID
+cat examples/patches/group-add-members.json | scim-ctl update -r group GROUP_ID
 ```
 
 #### Remove Member from Group
 
 ```bash
 # Remove specific user from group
-cat examples/patches/group-remove-member.json | scim-ctl patch -r group GROUP_ID
+cat examples/patches/group-remove-member.json | scim-ctl update -r group GROUP_ID
 ```
 
 #### Update Group Information
 
 ```bash
 # Change group display name and external ID
-cat examples/patches/group-update-info.json | scim-ctl patch -r group GROUP_ID
+cat examples/patches/group-update-info.json | scim-ctl update -r group GROUP_ID
 ```
 
 ## Search and Filter Examples
