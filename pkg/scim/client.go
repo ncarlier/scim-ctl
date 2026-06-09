@@ -38,6 +38,7 @@ type Client struct {
 	verbose       bool
 	authenticator *auth.Authenticator
 	authConfig    *auth.DeviceFlowConfig
+	extraHeaders  map[string]string
 }
 
 // Resource represents a generic SCIM resource
@@ -89,7 +90,8 @@ func NewClient(cfg *config.Config) (*Client, error) {
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-		verbose: cfg.Verbose,
+		verbose:      cfg.Verbose,
+		extraHeaders: cfg.ExtraHeaders,
 	}, nil
 }
 
@@ -379,6 +381,9 @@ func (c *Client) performHTTPRequest(ctx context.Context, method, url string, bod
 	}
 	if c.accessToken != "" {
 		req.Header.Set("Authorization", "Bearer "+c.accessToken)
+	}
+	for k, v := range c.extraHeaders {
+		req.Header.Set(k, v)
 	}
 
 	if c.verbose {

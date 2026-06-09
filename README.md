@@ -38,6 +38,22 @@ It obtains the Access Token from an OIDC provider using the OAuth 2.0 Device Aut
 | `--oidc-client-id`      | `SCIM_CTL_OIDC_CLIENT_ID`      | Client ID             |
 | `--oidc-client-secret`  | `SCIM_CTL_OIDC_CLIENT_SECRET`  | Client Secret         |
 
+## Configuration File
+
+In addition to environment variables and command-line flags, `scim-ctl` can be configured using a YAML configuration file (`scim-ctl.yml` by default).
+
+Example:
+
+```yaml
+target: "https://example.com/scim/v2"
+oidc:
+  issuer: "https://auth.example.com"
+  client-id: "my-client"
+  client-secret: "my-secret"
+extra-headers:
+  X-Custom-Header: "Some-Value"
+```
+
 ## Display
 
 Print HTTP request and response for debugging.

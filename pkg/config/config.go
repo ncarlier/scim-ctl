@@ -9,9 +9,10 @@ import (
 
 // Config represents the application configuration
 type Config struct {
-	Target  string `mapstructure:"target"`
-	Verbose bool   `mapstructure:"verbose"`
-	OIDC    OIDC   `mapstructure:"oidc"`
+	Target       string            `mapstructure:"target"`
+	Verbose      bool              `mapstructure:"verbose"`
+	OIDC         OIDC              `mapstructure:"oidc"`
+	ExtraHeaders map[string]string `mapstructure:"extra-headers"`
 }
 
 // OIDC represents the OAuth 2.0 configuration
