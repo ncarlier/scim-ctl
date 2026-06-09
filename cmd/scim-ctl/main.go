@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/idf-educ/idm/scim-ctl/internal/commands"
+	"github.com/ncarlier/scim-ctl/internal/commands"
 )
 
 func main() {

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/idf-educ/idm/scim-ctl/pkg/config"
-	"github.com/idf-educ/idm/scim-ctl/pkg/scim"
+	"github.com/ncarlier/scim-ctl/pkg/config"
+	"github.com/ncarlier/scim-ctl/pkg/scim"
 	"github.com/spf13/cobra"
 )
 

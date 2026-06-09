@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/idf-educ/idm/scim-ctl/pkg/auth"
-	"github.com/idf-educ/idm/scim-ctl/pkg/config"
+	"github.com/ncarlier/scim-ctl/pkg/auth"
+	"github.com/ncarlier/scim-ctl/pkg/config"
 	"github.com/spf13/cobra"
 )
 

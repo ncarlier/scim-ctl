@@ -1,4 +1,4 @@
-module github.com/idf-educ/idm/scim-ctl
+module github.com/ncarlier/scim-ctl
 
 go 1.24.0
 

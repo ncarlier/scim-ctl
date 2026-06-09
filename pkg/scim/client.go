@@ -16,8 +16,8 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
-	"github.com/idf-educ/idm/scim-ctl/pkg/auth"
-	"github.com/idf-educ/idm/scim-ctl/pkg/config"
+	"github.com/ncarlier/scim-ctl/pkg/auth"
+	"github.com/ncarlier/scim-ctl/pkg/config"
 )
 
 // Convert ressource type to SCIM resource name.
