@@ -36,10 +36,11 @@ var cacheClearCmd = &cobra.Command{
 			ClientID:     cfg.OIDC.ClientID,
 			ClientSecret: cfg.OIDC.ClientSecret,
 			Scopes:       []string{"openid", "profile"},
+			CacheDir:     cfg.CacheDir,
 		}
 
 		authenticator := auth.NewAuthenticator(authConfig)
-		
+
 		if err := authenticator.ClearCache(cfg.Verbose); err != nil {
 			return fmt.Errorf("failed to clear cache: %w", err)
 		}
@@ -64,10 +65,11 @@ var cacheInfoCmd = &cobra.Command{
 			ClientID:     cfg.OIDC.ClientID,
 			ClientSecret: cfg.OIDC.ClientSecret,
 			Scopes:       []string{"openid", "profile"},
+			CacheDir:     cfg.CacheDir,
 		}
 
 		authenticator := auth.NewAuthenticator(authConfig)
-		
+
 		// Try to load cached token to show info
 		cachedToken, err := authenticator.GetCacheInfo()
 		if err != nil {
@@ -85,13 +87,13 @@ var cacheInfoCmd = &cobra.Command{
 		fmt.Printf("  Token Type: %s\n", cachedToken.TokenType)
 		fmt.Printf("  Scopes: %s\n", cachedToken.Scopes)
 		fmt.Printf("  Expires At: %s\n", cachedToken.ExpiresAt.Format("2006-01-02 15:04:05 MST"))
-		
+
 		if cachedToken.ExpiresAt.Before(time.Now()) {
 			fmt.Printf("  Status: Expired\n")
 		} else {
 			fmt.Printf("  Status: Valid\n")
 		}
-		
+
 		if cachedToken.RefreshToken != "" {
 			fmt.Printf("  Refresh Token: Available\n")
 		} else {

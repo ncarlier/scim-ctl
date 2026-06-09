@@ -12,6 +12,7 @@ type Config struct {
 	Target       string            `mapstructure:"target"`
 	Verbose      bool              `mapstructure:"verbose"`
 	OIDC         OIDC              `mapstructure:"oidc"`
+	CacheDir     string            `mapstructure:"cache-dir"`
 	ExtraHeaders map[string]string `mapstructure:"extra-headers"`
 }
 

@@ -15,6 +15,7 @@ var (
 	oidcIssuer   string
 	clientID     string
 	clientSecret string
+	cacheDir     string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -40,6 +41,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&oidcIssuer, "oidc-issuer", "", "OpenID Connect Issuer (env: SCIM_CTL_OIDC_ISSUER)")
 	rootCmd.PersistentFlags().StringVar(&clientID, "oidc-client-id", "", "OIDC Client ID (env: SCIM_CTL_OIDC_CLIENT_ID)")
 	rootCmd.PersistentFlags().StringVar(&clientSecret, "oidc-client-secret", "", "OIDC Client Secret (env: SCIM_CTL_OIDC_CLIENT_SECRET)")
+	rootCmd.PersistentFlags().StringVar(&cacheDir, "cache-dir", "", "Cache directory for tokens (env: SCIM_CTL_CACHE_DIR)")
 
 	// Bind flags to viper
 	viper.BindPFlag("target", rootCmd.PersistentFlags().Lookup("target"))
@@ -47,12 +49,14 @@ func init() {
 	viper.BindPFlag("oidc.issuer", rootCmd.PersistentFlags().Lookup("oidc-issuer"))
 	viper.BindPFlag("oidc.client-id", rootCmd.PersistentFlags().Lookup("oidc-client-id"))
 	viper.BindPFlag("oidc.client-secret", rootCmd.PersistentFlags().Lookup("oidc-client-secret"))
+	viper.BindPFlag("cache-dir", rootCmd.PersistentFlags().Lookup("cache-dir"))
 
 	// Bind environment variables
 	viper.BindEnv("target", "SCIM_CTL_TARGET")
 	viper.BindEnv("oidc.issuer", "SCIM_CTL_OIDC_ISSUER")
 	viper.BindEnv("oidc.client-id", "SCIM_CTL_OIDC_CLIENT_ID")
 	viper.BindEnv("oidc.client-secret", "SCIM_CTL_OIDC_CLIENT_SECRET")
+	viper.BindEnv("cache-dir", "SCIM_CTL_CACHE_DIR")
 }
 
 // initConfig reads in config file and ENV variables if set.

@@ -23,6 +23,7 @@ type DeviceFlowConfig struct {
 	ClientID     string
 	ClientSecret string
 	Scopes       []string
+	CacheDir     string
 }
 
 // DeviceCodeResponse represents the device code response
@@ -71,8 +72,13 @@ type Authenticator struct {
 // NewAuthenticator creates a new authenticator
 func NewAuthenticator(config *DeviceFlowConfig) *Authenticator {
 	// Create cache file path based on configuration
-	homeDir, _ := os.UserHomeDir()
-	cacheDir := fmt.Sprintf("%s/.cache/scim-ctl", homeDir)
+	var cacheDir string
+	if config.CacheDir != "" {
+		cacheDir = config.CacheDir
+	} else {
+		homeDir, _ := os.UserHomeDir()
+		cacheDir = fmt.Sprintf("%s/.cache/scim-ctl", homeDir)
+	}
 	os.MkdirAll(cacheDir, 0700) // Create cache directory with restricted permissions
 
 	// Create a unique cache file name based on issuer and client_id
@@ -311,6 +317,7 @@ func (a *Authenticator) GetAccessToken(ctx context.Context, verbose bool) (strin
 
 	return tokenResp.AccessToken, nil
 }
+
 // performDeviceFlow executes the OAuth 2.0 device authorization grant flow
 func (a *Authenticator) performDeviceFlow(ctx context.Context, verbose bool) (*TokenResponse, error) {
 	// Discover OIDC endpoints

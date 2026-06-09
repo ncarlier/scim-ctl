@@ -102,6 +102,7 @@ func (c *Client) Authenticate(ctx context.Context, cfg *config.Config) error {
 		ClientID:     cfg.OIDC.ClientID,
 		ClientSecret: cfg.OIDC.ClientSecret,
 		Scopes:       []string{"openid", "profile", "email"},
+		CacheDir:     cfg.CacheDir,
 	}
 
 	authenticator := auth.NewAuthenticator(authConfig)
