@@ -51,6 +51,31 @@ func TestConfigValidation(t *testing.T) {
 			},
 			wantError: true,
 		},
+		{
+			name: "missing OIDC client secret for client_credentials",
+			config: Config{
+				Target: "https://example.com/scim/v2",
+				OIDC: OIDC{
+					Issuer:    "https://auth.example.com",
+					ClientID:  "test-client",
+					GrantType: "client_credentials",
+				},
+			},
+			wantError: true,
+		},
+		{
+			name: "valid client_credentials config",
+			config: Config{
+				Target: "https://example.com/scim/v2",
+				OIDC: OIDC{
+					Issuer:       "https://auth.example.com",
+					ClientID:     "test-client",
+					ClientSecret: "test-secret",
+					GrantType:    "client_credentials",
+				},
+			},
+			wantError: false,
+		},
 	}
 
 	for _, tt := range tests {

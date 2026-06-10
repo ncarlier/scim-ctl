@@ -31,10 +31,11 @@ var cacheClearCmd = &cobra.Command{
 			return fmt.Errorf("failed to get configuration: %w", err)
 		}
 
-		authConfig := &auth.DeviceFlowConfig{
+		authConfig := &auth.AuthConfig{
 			Issuer:       cfg.OIDC.Issuer,
 			ClientID:     cfg.OIDC.ClientID,
 			ClientSecret: cfg.OIDC.ClientSecret,
+			GrantType:    cfg.OIDC.GrantType,
 			Scopes:       []string{"openid", "profile"},
 			CacheDir:     cfg.CacheDir,
 		}
@@ -60,10 +61,11 @@ var cacheInfoCmd = &cobra.Command{
 			return fmt.Errorf("failed to get configuration: %w", err)
 		}
 
-		authConfig := &auth.DeviceFlowConfig{
+		authConfig := &auth.AuthConfig{
 			Issuer:       cfg.OIDC.Issuer,
 			ClientID:     cfg.OIDC.ClientID,
 			ClientSecret: cfg.OIDC.ClientSecret,
+			GrantType:    cfg.OIDC.GrantType,
 			Scopes:       []string{"openid", "profile"},
 			CacheDir:     cfg.CacheDir,
 		}

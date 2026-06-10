@@ -17,11 +17,12 @@ import (
 // Default valifdity time window for tokens
 const TOKEN_VALIDITY_WINDOW = 1 * time.Minute
 
-// DeviceFlowConfig represents the device flow configuration
-type DeviceFlowConfig struct {
+// AuthConfig represents the authentication configuration
+type AuthConfig struct {
 	Issuer       string
 	ClientID     string
 	ClientSecret string
+	GrantType    string
 	Scopes       []string
 	CacheDir     string
 }
@@ -60,17 +61,18 @@ type CachedToken struct {
 	Scopes       string    `json:"scopes"`
 	Issuer       string    `json:"issuer"`
 	ClientID     string    `json:"client_id"`
+	GrantType    string    `json:"grant_type"`
 }
 
 // Authenticator handles OAuth 2.0 Device Authorization Grant flow
 type Authenticator struct {
-	config    *DeviceFlowConfig
+	config    *AuthConfig
 	client    *http.Client
 	cacheFile string
 }
 
 // NewAuthenticator creates a new authenticator
-func NewAuthenticator(config *DeviceFlowConfig) *Authenticator {
+func NewAuthenticator(config *AuthConfig) *Authenticator {
 	// Create cache file path based on configuration
 	var cacheDir string
 	if config.CacheDir != "" {
@@ -110,7 +112,7 @@ func (a *Authenticator) loadCachedToken(verbose bool) (*CachedToken, error) {
 	}
 
 	// Check if token is for the same configuration
-	if cached.Issuer != a.config.Issuer || cached.ClientID != a.config.ClientID {
+	if cached.Issuer != a.config.Issuer || cached.ClientID != a.config.ClientID || cached.GrantType != a.config.GrantType {
 		if verbose {
 			fmt.Fprintf(os.Stderr, "Cache token is for different configuration, ignoring\n")
 		}
@@ -133,6 +135,7 @@ func (a *Authenticator) saveCachedToken(token *TokenResponse, verbose bool) erro
 		Scopes:       token.Scope,
 		Issuer:       a.config.Issuer,
 		ClientID:     a.config.ClientID,
+		GrantType:    a.config.GrantType,
 	}
 
 	data, err := json.MarshalIndent(cached, "", "  ")
@@ -280,6 +283,26 @@ func (a *Authenticator) GetAccessTokenSilent(ctx context.Context, verbose bool) 
 			return refreshed.AccessToken, nil
 		}
 
+		// If client credentials flow, request a new token silently
+		if a.config.GrantType == "client_credentials" {
+			if verbose {
+				fmt.Fprintf(os.Stderr, "Access token expired, requesting new client credentials token...\n")
+			}
+			newToken, err := a.performClientCredentialsFlow(ctx, verbose)
+			if err != nil {
+				if verbose {
+					fmt.Fprintf(os.Stderr, "Client credentials token request failed: %v\n", err)
+				}
+				a.clearCache(verbose)
+				return "", fmt.Errorf("client credentials token request failed: %w", err)
+			}
+
+			if err := a.saveCachedToken(newToken, verbose); err != nil && verbose {
+				fmt.Fprintf(os.Stderr, "Failed to cache token: %v\n", err)
+			}
+			return newToken.AccessToken, nil
+		}
+
 		if verbose {
 			fmt.Fprintf(os.Stderr, "Access token expired and no refresh token available\n")
 		}
@@ -301,11 +324,17 @@ func (a *Authenticator) GetAccessToken(ctx context.Context, verbose bool) (strin
 	}
 
 	if verbose {
-		fmt.Fprintf(os.Stderr, "Silent authentication failed: %v, performing device flow authentication\n", err)
+		fmt.Fprintf(os.Stderr, "Silent authentication failed: %v, performing full authentication flow\n", err)
 	}
 
-	// No valid cached token, perform device flow
-	tokenResp, err := a.performDeviceFlow(ctx, verbose)
+	var tokenResp *TokenResponse
+	if a.config.GrantType == "client_credentials" {
+		tokenResp, err = a.performClientCredentialsFlow(ctx, verbose)
+	} else {
+		// Default to device flow
+		tokenResp, err = a.performDeviceFlow(ctx, verbose)
+	}
+
 	if err != nil {
 		return "", err
 	}
@@ -336,6 +365,61 @@ func (a *Authenticator) performDeviceFlow(ctx context.Context, verbose bool) (*T
 	token, err := a.pollForToken(ctx, discovery.TokenEndpoint, deviceCode, verbose)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get token: %w", err)
+	}
+
+	return token, nil
+}
+
+// performClientCredentialsFlow executes the OAuth 2.0 client credentials grant flow
+func (a *Authenticator) performClientCredentialsFlow(ctx context.Context, verbose bool) (*TokenResponse, error) {
+	// Discover OIDC endpoints
+	discovery, err := a.discoverOIDC(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to discover OIDC endpoints: %w", err)
+	}
+
+	data := url.Values{
+		"grant_type":    {"client_credentials"},
+		"client_id":     {a.config.ClientID},
+		"client_secret": {a.config.ClientSecret},
+		"scope":         {strings.Join(a.config.Scopes, " ")},
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", discovery.TokenEndpoint, strings.NewReader(data.Encode()))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	if verbose {
+		fmt.Fprintf(os.Stderr, "Requesting client credentials token from %s\n", discovery.TokenEndpoint)
+	}
+
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var tokenResp map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("client credentials request failed with status %d: %s",
+			resp.StatusCode, getString(tokenResp, "error_description"))
+	}
+
+	token := &TokenResponse{
+		AccessToken: getString(tokenResp, "access_token"),
+		TokenType:   getString(tokenResp, "token_type"),
+		Scope:       getString(tokenResp, "scope"),
+	}
+
+	if expiresIn, ok := tokenResp["expires_in"].(float64); ok {
+		token.ExpiresIn = int(expiresIn)
 	}
 
 	return token, nil
@@ -544,8 +628,8 @@ func (a *Authenticator) GetCacheInfo() (*CachedToken, error) {
 }
 
 // hashConfig creates a hash of the configuration for cache file naming
-func hashConfig(config *DeviceFlowConfig) [32]byte {
-	data := fmt.Sprintf("%s:%s", config.Issuer, config.ClientID)
+func hashConfig(config *AuthConfig) [32]byte {
+	data := fmt.Sprintf("%s:%s:%s", config.Issuer, config.ClientID, config.GrantType)
 	return sha256.Sum256([]byte(data))
 }
 

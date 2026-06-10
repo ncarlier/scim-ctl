@@ -37,6 +37,9 @@ It obtains the Access Token from an OIDC provider using the OAuth 2.0 Device Aut
 | `--oidc-issuer`         | `SCIM_CTL_OIDC_ISSUER`         | OpenID Connect Issuer |
 | `--oidc-client-id`      | `SCIM_CTL_OIDC_CLIENT_ID`      | Client ID             |
 | `--oidc-client-secret`  | `SCIM_CTL_OIDC_CLIENT_SECRET`  | Client Secret         |
+| `--oidc-grant-type`     | `SCIM_CTL_OIDC_GRANT_TYPE`     | Grant Type            |
+
+Supported grant type are `client_credentials` or `device_code` (default).
 
 ## Configuration File
 
@@ -84,7 +87,7 @@ scim-ctl create --resource user --data '{"userName": "jdoe", ...}'
 
 | Parameter         | Alias | Description                 |
 | ----------------- | ----- | --------------------------- |
-| `--resource`       | `-r`  | SCIM resource type          |
+| `--resource`      | `-r`  | SCIM resource type          |
 | `--data`          | `-d`  | SCIM resource payload       |
 
 Data can also be provided via STDIN:

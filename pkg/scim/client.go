@@ -37,7 +37,7 @@ type Client struct {
 	accessToken   string
 	verbose       bool
 	authenticator *auth.Authenticator
-	authConfig    *auth.DeviceFlowConfig
+	authConfig    *auth.AuthConfig
 	extraHeaders  map[string]string
 }
 
@@ -97,10 +97,11 @@ func NewClient(cfg *config.Config) (*Client, error) {
 
 // Authenticate performs OAuth 2.0 Device Grant authentication
 func (c *Client) Authenticate(ctx context.Context, cfg *config.Config) error {
-	authConfig := &auth.DeviceFlowConfig{
+	authConfig := &auth.AuthConfig{
 		Issuer:       cfg.OIDC.Issuer,
 		ClientID:     cfg.OIDC.ClientID,
 		ClientSecret: cfg.OIDC.ClientSecret,
+		GrantType:    cfg.OIDC.GrantType,
 		Scopes:       []string{"openid", "profile", "email"},
 		CacheDir:     cfg.CacheDir,
 	}
