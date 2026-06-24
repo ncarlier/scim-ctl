@@ -38,6 +38,7 @@ It obtains the Access Token from an OIDC provider using the OAuth 2.0 Device Aut
 | `--oidc-client-id`      | `SCIM_CTL_OIDC_CLIENT_ID`      | Client ID             |
 | `--oidc-client-secret`  | `SCIM_CTL_OIDC_CLIENT_SECRET`  | Client Secret         |
 | `--oidc-grant-type`     | `SCIM_CTL_OIDC_GRANT_TYPE`     | Grant Type            |
+| `--extra-header`        | -                              | Extra HTTP headers (format: `key=value`, can be specified multiple times) |
 
 Supported grant type are `client_credentials` or `device_code` (default).
 

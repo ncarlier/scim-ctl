@@ -17,6 +17,7 @@ var (
 	clientSecret  string
 	oidcGrantType string
 	cacheDir      string
+	extraHeaders  map[string]string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -44,6 +45,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&clientSecret, "oidc-client-secret", "", "OIDC Client Secret (env: SCIM_CTL_OIDC_CLIENT_SECRET)")
 	rootCmd.PersistentFlags().StringVar(&oidcGrantType, "oidc-grant-type", "device_code", "OIDC Grant Type (device_code or client_credentials) (env: SCIM_CTL_OIDC_GRANT_TYPE)")
 	rootCmd.PersistentFlags().StringVar(&cacheDir, "cache-dir", "", "Cache directory for tokens (env: SCIM_CTL_CACHE_DIR)")
+	rootCmd.PersistentFlags().StringToStringVar(&extraHeaders, "extra-header", nil, "Extra HTTP header to send with requests (format: key=value, can be specified multiple times)")
 
 	// Bind flags to viper
 	viper.BindPFlag("target", rootCmd.PersistentFlags().Lookup("target"))
@@ -53,6 +55,7 @@ func init() {
 	viper.BindPFlag("oidc.client-secret", rootCmd.PersistentFlags().Lookup("oidc-client-secret"))
 	viper.BindPFlag("oidc.grant-type", rootCmd.PersistentFlags().Lookup("oidc-grant-type"))
 	viper.BindPFlag("cache-dir", rootCmd.PersistentFlags().Lookup("cache-dir"))
+	viper.BindPFlag("extra-headers", rootCmd.PersistentFlags().Lookup("extra-header"))
 
 	// Bind environment variables
 	viper.BindEnv("target", "SCIM_CTL_TARGET")
