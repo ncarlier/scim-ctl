@@ -7,8 +7,9 @@ This directory contains comprehensive examples for SCIM (System for Cross-domain
 ```
 examples/
 ├── users/           # User resource examples
-├── groups/          # Group resource examples  
-├── replaces/         # Full resource update examples
+├── groups/          # Group resource examples
+├── import/          # Import operations examples
+├── replaces/        # Full resource update examples
 ├── patches/         # PATCH operation examples
 ├── filters/         # Search filter examples
 └── README.md        # This file
@@ -265,6 +266,17 @@ scim-ctl delete -r user USER_ID
 ```bash
 # Delete group by ID  
 scim-ctl delete -r group GROUP_ID
+```
+
+### Importing Resources
+
+#### import Users from JSON Lines
+
+```bash
+# Import users from a JSON Lines file
+scim-ctl import -r user -f users.jsonl
+# or
+cat users.jsonl | scim-ctl import -r user
 ```
 
 ### Exporting Resources

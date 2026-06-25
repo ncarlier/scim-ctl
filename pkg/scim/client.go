@@ -20,8 +20,8 @@ import (
 	"github.com/ncarlier/scim-ctl/pkg/config"
 )
 
-// Convert ressource type to SCIM resource name.
-func ressourceName(resourceType string) string {
+// Convert resource type to SCIM resource name.
+func ResourceName(resourceType string) string {
 	result := cases.Title(language.English).String(resourceType)
 	result = strings.ReplaceAll(result, "-", "")
 	if result != "Me" {
@@ -77,6 +77,36 @@ type PatchOperation struct {
 	Op    string      `json:"op"`
 	Path  string      `json:"path,omitempty"`
 	Value interface{} `json:"value,omitempty"`
+}
+
+// BulkOperation represents a single operation in a bulk request
+type BulkOperation struct {
+	Method string      `json:"method"`
+	Path   string      `json:"path"`
+	BulkId string      `json:"bulkId,omitempty"`
+	Data   interface{} `json:"data,omitempty"`
+}
+
+// BulkRequest represents a SCIM bulk request payload
+type BulkRequest struct {
+	Schemas    []string        `json:"schemas"`
+	Operations []BulkOperation `json:"Operations"`
+}
+
+// BulkOperationResponse represents a single response inside a bulk response
+type BulkOperationResponse struct {
+	Method   string      `json:"method"`
+	BulkId   string      `json:"bulkId,omitempty"`
+	Version  string      `json:"version,omitempty"`
+	Location string      `json:"location,omitempty"`
+	Status   int         `json:"status"`
+	Response interface{} `json:"response,omitempty"`
+}
+
+// BulkResponse represents the overall response from a bulk request
+type BulkResponse struct {
+	Schemas    []string                `json:"schemas"`
+	Operations []BulkOperationResponse `json:"Operations"`
 }
 
 // NewClient creates a new SCIM client
@@ -152,7 +182,7 @@ func (c *Client) GetResourceTypes(ctx context.Context) ([]Resource, error) {
 
 // CreateResource creates a SCIM resource
 func (c *Client) CreateResource(ctx context.Context, resourceType string, data Resource) (Resource, error) {
-	url := c.baseURL + "/" + ressourceName(resourceType)
+	url := c.baseURL + "/" + ResourceName(resourceType)
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -174,7 +204,7 @@ func (c *Client) CreateResource(ctx context.Context, resourceType string, data R
 
 // GetResource retrieves a SCIM resource by ID
 func (c *Client) GetResource(ctx context.Context, resourceType, id string, attributes []string) (Resource, error) {
-	baseURL := c.baseURL + "/" + ressourceName(resourceType)
+	baseURL := c.baseURL + "/" + ResourceName(resourceType)
 	if id != "" {
 		baseURL += "/" + id
 	}
@@ -206,7 +236,7 @@ func (c *Client) GetResource(ctx context.Context, resourceType, id string, attri
 
 // ReplaceResource replaces a SCIM resource
 func (c *Client) ReplaceResource(ctx context.Context, resourceType, id string, data Resource) (Resource, error) {
-	url := c.baseURL + "/" + ressourceName(resourceType) + "/" + id
+	url := c.baseURL + "/" + ResourceName(resourceType) + "/" + id
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -228,7 +258,7 @@ func (c *Client) ReplaceResource(ctx context.Context, resourceType, id string, d
 
 // UpdateResource updates a SCIM resource using PATCH
 func (c *Client) UpdateResource(ctx context.Context, resourceType, id string, operations []PatchOperation) (Resource, error) {
-	url := c.baseURL + "/" + ressourceName(resourceType) + "/" + id
+	url := c.baseURL + "/" + ResourceName(resourceType) + "/" + id
 
 	payload := map[string]interface{}{
 		"schemas":    []string{"urn:ietf:params:scim:api:messages:2.0:PatchOp"},
@@ -255,7 +285,7 @@ func (c *Client) UpdateResource(ctx context.Context, resourceType, id string, op
 
 // DeleteResource deletes a SCIM resource
 func (c *Client) DeleteResource(ctx context.Context, resourceType, id string) error {
-	url := c.baseURL + "/" + ressourceName(resourceType) + "/" + id
+	url := c.baseURL + "/" + ResourceName(resourceType) + "/" + id
 
 	_, err := c.doRequest(ctx, "DELETE", url, nil)
 	return err
@@ -263,7 +293,7 @@ func (c *Client) DeleteResource(ctx context.Context, resourceType, id string) er
 
 // SearchResources searches SCIM resources
 func (c *Client) SearchResources(ctx context.Context, resourceType string, filter string, query string, startIndex, count int, sortBy, sortOrder string, attributes []string) (*ListResponse, error) {
-	baseURL := c.baseURL + "/" + ressourceName(resourceType)
+	baseURL := c.baseURL + "/" + ResourceName(resourceType)
 
 	// Use URL parameters for GET request
 	u, err := url.Parse(baseURL)
@@ -306,6 +336,31 @@ func (c *Client) SearchResources(ctx context.Context, resourceType string, filte
 	}
 
 	return &listResp, nil
+}
+
+// Bulk performs a SCIM bulk operation
+func (c *Client) Bulk(ctx context.Context, req BulkRequest) (*BulkResponse, error) {
+	url := c.baseURL + "/Bulk"
+
+	// Ensure correct schema
+	req.Schemas = []string{"urn:ietf:params:scim:api:messages:2.0:BulkRequest"}
+
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal bulk request: %w", err)
+	}
+
+	resp, err := c.doRequest(ctx, "POST", url, jsonData)
+	if err != nil {
+		return nil, err
+	}
+
+	var bulkResp BulkResponse
+	if err := json.Unmarshal(resp, &bulkResp); err != nil {
+		return nil, fmt.Errorf("failed to decode bulk response: %w", err)
+	}
+
+	return &bulkResp, nil
 }
 
 // doRequest performs an HTTP request with proper headers and error handling
@@ -415,10 +470,10 @@ func (c *Client) performHTTPRequest(ctx context.Context, method, url string, bod
 
 	if c.verbose {
 		dump, err := httputil.DumpResponse(resp, true)
-		if err == nil {
+		if err != nil {
 			fmt.Fprintf(os.Stderr, "← %d %s\n", resp.StatusCode, resp.Status)
 		} else {
-			fmt.Fprintf(os.Stderr, "→ Request Dump:\n%s\n", dump)
+			fmt.Fprintf(os.Stderr, "→ Response Dump:\n%s\n", dump)
 		}
 	}
 

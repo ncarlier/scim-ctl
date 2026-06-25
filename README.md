@@ -184,6 +184,27 @@ scim-ctl export -r group -f 'displayName co "admin"' --items-per-page 100
 | `--query`          | `-q`  | Full-text search query (out of SCIM spec)      |
 | `--items-per-page` | `-i`  | Paginations size                               |
 
+### Import (`import`)
+
+Import SCIM resources using the Bulk API. The input data should be a stream of JSON Lines, where each line is the payload of a resource to create.
+
+```bash
+scim-ctl import --resource user --file users.jsonl
+scim-ctl import -r user -f users.jsonl --chunk 50
+```
+
+| Parameter         | Alias | Description                     |
+| ----------------- | ----- | ------------------------------- |
+| `--resource`      | `-r`  | SCIM resource type (required)   |
+| `--file`          | `-f`  | Input JSON Lines file path      |
+| `--chunk`         | n/a   | Chunk size for bulk requests (default: 100) |
+
+Data can also be provided via STDIN:
+
+```bash
+cat users.jsonl | scim-ctl import -r user --chunk 100
+```
+
 ## Examples and Usage Guides
 
 The `examples/` directory contains comprehensive SCIM JSON examples and detailed usage instructions:

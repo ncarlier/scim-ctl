@@ -64,6 +64,10 @@ func init() {
 	viper.BindEnv("oidc.client-secret", "SCIM_CTL_OIDC_CLIENT_SECRET")
 	viper.BindEnv("oidc.grant-type", "SCIM_CTL_OIDC_GRANT_TYPE")
 	viper.BindEnv("cache-dir", "SCIM_CTL_CACHE_DIR")
+
+	// Silence usage and error
+	rootCmd.SilenceUsage = true
+	rootCmd.SilenceErrors = true
 }
 
 // initConfig reads in config file and ENV variables if set.
