@@ -122,5 +122,6 @@ distribution:
 	GOARCH=arm64 make build archive
 	GOARCH=arm make build archive
 	GOOS=darwin make build archive
+	GOOS=windows make build archive
 	@echo ">>> Distribution binaries created ✅"
 .PHONY: distribution
