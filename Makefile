@@ -1,109 +1,126 @@
-# Makefile for SCIM CTL
+.SILENT :
 
-.PHONY: build test clean install help run-setup run-interactive
+# App name
+APPNAME=scim-ctl
 
-# Default Go parameters
-GOCMD=go
-GOBUILD=$(GOCMD) build
-GOCLEAN=$(GOCMD) clean
-GOTEST=$(GOCMD) test
-GOGET=$(GOCMD) get
-GOMOD=$(GOCMD) mod
-BINARY_NAME=scim-ctl
-MAIN_PATH=./cmd/scim-ctl
+# Main path
+MAIN_PATH=./cmd/$(APPNAME)
 
-# Build the binary
-build:
-	@echo "Building $(BINARY_NAME)..."
-	$(GOBUILD) -o $(BINARY_NAME) $(MAIN_PATH)
-	@echo "✅ Build complete: $(BINARY_NAME)"
+# Go configuration
+GOOS?=$(shell go env GOHOSTOS)
+GOARCH?=$(shell go env GOHOSTARCH)
 
-# Run tests
-test:
-	@echo "Running tests..."
-	$(GOTEST) -v ./...
-	@echo "✅ Tests complete"
+# Add exe extension if windows target
+is_windows:=$(filter windows,$(GOOS))
+EXT:=$(if $(is_windows),".exe","")
 
-# Clean build artifacts
-clean:
-	@echo "Cleaning..."
-	$(GOCLEAN)
-	rm -f $(BINARY_NAME)
-	@echo "✅ Clean complete"
+# Archive name
+ARCHIVE=$(APPNAME)-$(GOOS)-$(GOARCH).tgz
 
-# Download dependencies
-deps:
-	@echo "Downloading dependencies..."
-	$(GOMOD) download
-	$(GOMOD) tidy
-	@echo "✅ Dependencies updated"
+# Executable name
+EXECUTABLE=$(APPNAME)$(EXT)
 
-# Install binary to GOPATH/bin
-install: build
-	@echo "Installing $(BINARY_NAME)..."
-	cp $(BINARY_NAME) $(shell go env GOPATH)/bin/
-	@echo "✅ Installed to $(shell go env GOPATH)/bin/$(BINARY_NAME)"
+# Extract version infos
+PKG_VERSION:=github.com/ncarlier/$(APPNAME)/internal/version
+VERSION:=`git describe --always --tags --dirty`
+GIT_COMMIT:=`git rev-list -1 HEAD --abbrev-commit`
+BUILT:=`date`
+define LDFLAGS
+-X '$(PKG_VERSION).Version=$(VERSION)' \
+-X '$(PKG_VERSION).GitCommit=$(GIT_COMMIT)' \
+-X '$(PKG_VERSION).Built=$(BUILT)' \
+-s -w -buildid=
+endef
 
-# Run the setup wizard using the bash script
-run-setup: build
-	@echo "Running setup wizard..."
-	./scim.sh setup
+all: build
 
-# Run interactive mode using the bash script
-run-interactive: build
-	@echo "Starting interactive mode..."
-	./scim.sh interactive
-
-# Build and show help
-run-help: build
-	@echo "SCIM CTL Help:"
-	@echo "=============="
-	./$(BINARY_NAME) --help
-	@echo
-	@echo "Bash Script Help:"
-	@echo "=================="
-	./scim.sh --help
-
-# Lint the code (requires golangci-lint)
-lint:
-	@if command -v golangci-lint >/dev/null 2>&1; then \
-		echo "Running linter..."; \
-		golangci-lint run; \
-		echo "✅ Lint complete"; \
-	else \
-		echo "⚠️  golangci-lint not installed. Install with:"; \
-		echo "   go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest"; \
-	fi
-
-# Format code
-fmt:
-	@echo "Formatting code..."
-	$(GOCMD) fmt ./...
-	@echo "✅ Format complete"
-
-# Generate documentation
-docs:
-	@echo "Current project structure:"
-	@tree -I 'vendor|.git' . || echo "Install 'tree' command for better output"
-	@echo
-	@echo "Available commands:"
-	@make help
-
-# Show available make targets
+## This help screen
 help:
-	@echo "Available targets:"
-	@echo "  build         - Build the scim-ctl binary"
-	@echo "  test          - Run tests"
-	@echo "  clean         - Remove build artifacts" 
-	@echo "  deps          - Download and tidy dependencies"
-	@echo "  install       - Install binary to GOPATH/bin"
-	@echo "  run-setup     - Run configuration setup wizard"
-	@echo "  run-interactive - Start interactive mode"
-	@echo "  run-help      - Show help for both CLI and script"
-	@echo "  lint          - Run code linter (requires golangci-lint)"
-	@echo "  fmt           - Format code"
-	@echo "  docs          - Show project documentation"
-	@echo "  help          - Show this help"
+	printf "Available targets:\n\n"
+	awk '/^[a-zA-Z\-\_0-9]+:/ { \
+		helpMessage = match(lastLine, /^## (.*)/); \
+		if (helpMessage) { \
+			helpCommand = substr($$1, 0, index($$1, ":")); \
+			helpMessage = substr(lastLine, RSTART + 3, RLENGTH); \
+			printf "%-15s %s\n", helpCommand, helpMessage; \
+		} \
+	} \
+	{ lastLine = $$0 }' $(MAKEFILE_LIST)
+.PHONY: help
 
-# Default target
-all: deps fmt lint test build
+## Clean built files
+clean:
+	-rm -rf release
+.PHONY: clean
+
+## Build executable
+build:
+	-mkdir -p release
+	@echo ">>> Building: $(EXECUTABLE) $(VERSION) for $(GOOS)-$(GOARCH) ..."
+	@GOOS=$(GOOS) GOARCH=$(GOARCH) go build -tags osusergo,netgo -ldflags "$(LDFLAGS)" -o release/$(EXECUTABLE) $(MAIN_PATH)
+	@echo ">>> Build complete: $(EXECUTABLE) $(VERSION) for $(GOOS)-$(GOARCH) ✅"
+.PHONY: build
+
+release/$(EXECUTABLE): build
+
+# Check code style
+check-style:
+	@echo ">>> Checking code style..."
+	go vet ./...
+	go run honnef.co/go/tools/cmd/staticcheck@latest ./...
+	@echo ">>> Code style check complete ✅"
+.PHONY: check-style
+
+# Check code criticity
+check-criticity:
+	@echo ">>> Checking code criticity..."
+	go run github.com/go-critic/go-critic/cmd/gocritic@latest check -enableAll ./...
+	@echo ">>> Code criticity check complete ✅"
+.PHONY: check-criticity
+
+# Check code security
+check-security:
+	@echo ">>> Checking code security..."
+	go run github.com/securego/gosec/v2/cmd/gosec@latest -quiet ./...
+	@echo ">>> Code security check complete ✅"
+.PHONY: check-security
+
+## Code quality checks
+checks: check-style check-criticity
+.PHONY: checks
+
+## Run tests
+test: 
+	@echo ">>> Running tests..."
+	go test ./...
+	@echo ">>> Tests complete ✅"
+.PHONY: test
+
+## Install executable
+install: release/$(EXECUTABLE)
+	@echo ">>> Installing $(EXECUTABLE) to ${HOME}/.local/bin/$(EXECUTABLE) ..."
+	cp release/$(EXECUTABLE) ${HOME}/.local/bin/$(EXECUTABLE)
+	@echo ">>> Installation complete ✅"
+.PHONY: install
+
+# Generate changelog
+CHANGELOG.md:
+	standard-changelog --first-release
+
+## Create archive
+archive: release/$(EXECUTABLE) CHANGELOG.md
+	echo ">>> Creating release/$(ARCHIVE) archive..."
+	tar czf release/$(ARCHIVE) README.md LICENSE CHANGELOG.md -C release/ $(EXECUTABLE)
+	rm release/$(EXECUTABLE)
+	@echo ">>> Release/$(ARCHIVE) archive created ✅"
+.PHONY: archive
+
+## Create distribution binaries
+distribution:
+	@echo ">>> Creating distribution binaries..."
+	GOARCH=amd64 make build archive
+	GOARCH=arm64 make build archive
+	GOARCH=arm make build archive
+	GOOS=darwin make build archive
+	@echo ">>> Distribution binaries created ✅"
+.PHONY: distribution

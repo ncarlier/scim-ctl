@@ -1,0 +1,51 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  # Build and test project
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v4
+      with:
+        go-version: stable
+    - run: make
+
+  # Create project release if tagged
+  release:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v4
+      with:
+        go-version: stable
+    - uses: actions/setup-node@v3
+      with:
+        node-version: current
+    - run: npm install -g standard-changelog
+    - run: make distribution
+    - name: get CHANGELOG
+      id: changelog
+      uses: requarks/changelog-action@v1
+      with:
+        token: ${{ github.token }}
+        tag: ${{ github.ref_name }}
+    - uses: softprops/action-gh-release@v1
+      with:
+        body: ${{ steps.changelog.outputs.changes }}
+        files: |
+          release/scim-ctl-linux-amd64.tgz
+          release/scim-ctl-linux-arm64.tgz
+          release/scim-ctl-linux-arm.tgz
+          release/scim-ctl-darwin-arm64.tgz
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

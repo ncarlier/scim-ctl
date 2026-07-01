@@ -1,4 +1,4 @@
 .env
-scim-ctl
+release/
 config/
 scim-ctl.yml
