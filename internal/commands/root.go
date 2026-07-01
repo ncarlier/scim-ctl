@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ncarlier/scim-ctl/internal/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -22,10 +23,11 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "scim-ctl",
-	Short: "A CLI tool for SCIM (System for Cross-domain Identity Management) operations",
-	Long: `scim-ctl is a CLI tool for interacting with a SCIM server. It supports CRUD operations
+	Use:     "scim-ctl",
+	Short:   "A CLI tool for SCIM (System for Cross-domain Identity Management) operations",
+	Long:    `scim-ctl is a CLI tool for interacting with a SCIM server. It supports CRUD operations
 and uses OAuth 2.0 Device Authorization Grant for authentication.`,
+	Version: version.Version,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -35,6 +37,15 @@ func Execute() error {
 
 func init() {
 	cobra.OnInitialize(initConfig)
+
+	rootCmd.SetVersionTemplate(fmt.Sprintf(`Version:    {{.Version}}
+Git commit: %s
+Built:      %s
+
+Copyright (C) 2026 Nicolas Carlier
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+`, version.GitCommit, version.Built))
 
 	// Global flags
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./scim-ctl.yml)")
