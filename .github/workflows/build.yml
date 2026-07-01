@@ -7,6 +7,9 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: write
+
 jobs:
   # Build and test project
   build:
@@ -46,6 +49,7 @@ jobs:
           release/scim-ctl-linux-amd64.tgz
           release/scim-ctl-linux-arm64.tgz
           release/scim-ctl-linux-arm.tgz
-          release/scim-ctl-darwin-arm64.tgz
+          release/scim-ctl-darwin-amd64.tgz
+          release/scim-ctl-windows-amd64.tgz
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
