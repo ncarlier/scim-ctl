@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BINARY_NAME="${BINARY_NAME:-scim-ctl}"
+GITHUB_REPO="${GITHUB_REPO:-ncarlier/scim-ctl}"
+INSTALL_DIR="${INSTALL_DIR:-}"
+VERSION="${VERSION:-}"
+
+err() {
+  printf "Error: %s\n" "$1" >&2
+  exit 1
+}
+
+require() {
+  command -v "$1" >/dev/null 2>&1 || err "Missing required command: $1"
+}
+
+download() {
+  local url="$1"
+  local output="$2"
+  local http_code
+
+  if command -v curl >/dev/null 2>&1; then
+    http_code="$(curl -sSL -w "%{http_code}" -o "$output" "$url" || true)"
+    if [ -z "$http_code" ]; then
+      rm -f "$output"
+      err "Download failed: $url"
+    fi
+    if [ "$http_code" = "404" ]; then
+      rm -f "$output"
+      err "Download not found (404): $url"
+    fi
+    if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 400 ]; then
+      rm -f "$output"
+      err "Download failed (HTTP $http_code): $url"
+    fi
+  elif command -v wget >/dev/null 2>&1; then
+    http_code="$(wget -q --server-response --spider "$url" 2>&1 | awk '/^  HTTP/{code=$2} END{print code}')"
+    if [ -z "$http_code" ]; then
+      err "Download failed: $url"
+    fi
+    if [ "$http_code" = "404" ]; then
+      err "Download not found (404): $url"
+    fi
+    if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 400 ]; then
+      err "Download failed (HTTP $http_code): $url"
+    fi
+    if ! wget -qO "$output" "$url"; then
+      err "Download failed: $url"
+    fi
+  else
+    err "curl or wget is required"
+  fi
+}
+
+os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+case "$os" in
+  darwin|linux)
+    ;;
+  *)
+    err "Unsupported OS: $os"
+    ;;
+esac
+
+arch="$(uname -m)"
+case "$arch" in
+  x86_64|amd64)
+    arch="amd64"
+    ;;
+  arm64|aarch64)
+    arch="arm64"
+    ;;
+  armv7l|armv6l|arm)
+    arch="arm"
+    ;;
+  *)
+    err "Unsupported architecture: $arch"
+    ;;
+esac
+
+
+require awk
+require tar
+
+release_json="$(mktemp)"
+if [ -z "$VERSION" ] || [ "$VERSION" = "latest" ]; then
+  download "https://api.github.com/repos/${GITHUB_REPO}/releases/latest" "$release_json"
+else
+  download "https://api.github.com/repos/${GITHUB_REPO}/releases/tags/${VERSION}" "$release_json"
+fi
+VERSION="$(awk -F '"' '/"tag_name":/ {print $4; exit}' "$release_json" | sed 's/^v//')"
+
+
+asset_name="${BINARY_NAME}-${os}-${arch}.tgz"
+
+tmp_dir="$(mktemp -d)"
+cleanup() {
+  rm -rf "$tmp_dir"
+}
+trap cleanup EXIT
+
+asset_url="$(awk -v name="$asset_name" -F '"' '$2=="name" && $4==name {found=1} found && $2=="browser_download_url" {print $4; exit}' "$release_json")"
+rm -f "$release_json"
+
+[ -n "$asset_url" ] || err "Release asset not found for tag ${VERSION}"
+
+download "$asset_url" "$tmp_dir/$asset_name"
+
+if [ -z "$INSTALL_DIR" ]; then
+  if [ -w "/usr/local/bin" ]; then
+    INSTALL_DIR="/usr/local/bin"
+  else
+    INSTALL_DIR="${HOME}/.local/bin"
+  fi
+fi
+
+mkdir -p "$INSTALL_DIR"
+
+tar -xzf "$tmp_dir/$asset_name" -C "$tmp_dir" "$BINARY_NAME" || err "Failed to extract $BINARY_NAME from archive"
+
+install "$tmp_dir/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
+
+printf "%s installed to %s/%s\n" "$BINARY_NAME" "$INSTALL_DIR" "$BINARY_NAME"
+
+if [ "$INSTALL_DIR" = "${HOME}/.local/bin" ]; then
+  printf "\nAdd %s to your PATH if needed:\n" "$INSTALL_DIR"
+  printf "\texport PATH='\$PATH:${INSTALL_DIR}'\n"
+  printf "\nget started with: %s --help\n" "$BINARY_NAME"
+fi

@@ -2,6 +2,14 @@
 
 `scim-ctl` is a CLI tool for interacting with a SCIM (System for Cross-domain Identity Management) server. It supports CRUD operations.
 
+# Installation
+
+Source code and releases are available at https://github.com/ncarlier/scim-ctl/releases
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ncarlier/scim-ctl/main/install.sh | bash
+```
+
 # Features
 
 ## SCIM Support
