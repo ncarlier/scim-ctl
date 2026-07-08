@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -155,11 +154,21 @@ Examples:
 			return err
 		}
 
-		msg := fmt.Sprintf("Import complete. Successfully created: %d, Errors: %d\n", totalSuccess, totalErrors)
-		if totalErrors > 0 {
-			return errors.New(msg)
+		report := map[string]interface{}{
+			"message":      "Import complete",
+			"totalSuccess": totalSuccess,
+			"totalErrors":  totalErrors,
 		}
-		fmt.Println(msg)
+
+		if reportJSON, err := json.Marshal(report); err == nil {
+			fmt.Println(string(reportJSON))
+		} else {
+			fmt.Fprintf(os.Stderr, "Failed to marshal final report: %v\n", err)
+		}
+
+		if totalErrors > 0 {
+			return fmt.Errorf("import completed with %d errors", totalErrors)
+		}
 
 		return nil
 	},

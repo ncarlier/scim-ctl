@@ -2,7 +2,9 @@ package commands
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/ncarlier/scim-ctl/pkg/config"
 	"github.com/ncarlier/scim-ctl/pkg/scim"
@@ -44,7 +46,18 @@ Examples:
 			return fmt.Errorf("failed to delete resource: %w", err)
 		}
 
-		fmt.Printf("Resource %s/%s deleted successfully\n", deleteResourceType, deleteID)
+		result := map[string]string{
+			"message":  fmt.Sprintf("Resource %s/%s deleted successfully", deleteResourceType, deleteID),
+			"resource": deleteResourceType,
+			"id":       deleteID,
+		}
+
+		if resultJSON, err := json.Marshal(result); err == nil {
+			fmt.Println(string(resultJSON))
+		} else {
+			fmt.Fprintf(os.Stderr, "Failed to marshal output: %v\n", err)
+		}
+
 		return nil
 	},
 }
