@@ -13,6 +13,7 @@ var (
 	cfgFile       string
 	target        string
 	verbose       bool
+	timeout       int
 	oidcIssuer    string
 	clientID      string
 	clientSecret  string
@@ -51,6 +52,7 @@ There is NO WARRANTY, to the extent permitted by law.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./scim-ctl.yml)")
 	rootCmd.PersistentFlags().StringVar(&target, "target", "", "SCIM target URL (env: SCIM_CTL_TARGET)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+	rootCmd.PersistentFlags().IntVar(&timeout, "timeout", 30, "HTTP request timeout in seconds (env: SCIM_CTL_TIMEOUT)")
 	rootCmd.PersistentFlags().StringVar(&oidcIssuer, "oidc-issuer", "", "OpenID Connect Issuer (env: SCIM_CTL_OIDC_ISSUER)")
 	rootCmd.PersistentFlags().StringVar(&clientID, "oidc-client-id", "", "OIDC Client ID (env: SCIM_CTL_OIDC_CLIENT_ID)")
 	rootCmd.PersistentFlags().StringVar(&clientSecret, "oidc-client-secret", "", "OIDC Client Secret (env: SCIM_CTL_OIDC_CLIENT_SECRET)")
@@ -61,6 +63,7 @@ There is NO WARRANTY, to the extent permitted by law.
 	// Bind flags to viper
 	viper.BindPFlag("target", rootCmd.PersistentFlags().Lookup("target"))
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
+	viper.BindPFlag("timeout", rootCmd.PersistentFlags().Lookup("timeout"))
 	viper.BindPFlag("oidc.issuer", rootCmd.PersistentFlags().Lookup("oidc-issuer"))
 	viper.BindPFlag("oidc.client-id", rootCmd.PersistentFlags().Lookup("oidc-client-id"))
 	viper.BindPFlag("oidc.client-secret", rootCmd.PersistentFlags().Lookup("oidc-client-secret"))
@@ -70,6 +73,7 @@ There is NO WARRANTY, to the extent permitted by law.
 
 	// Bind environment variables
 	viper.BindEnv("target", "SCIM_CTL_TARGET")
+	viper.BindEnv("timeout", "SCIM_CTL_TIMEOUT")
 	viper.BindEnv("oidc.issuer", "SCIM_CTL_OIDC_ISSUER")
 	viper.BindEnv("oidc.client-id", "SCIM_CTL_OIDC_CLIENT_ID")
 	viper.BindEnv("oidc.client-secret", "SCIM_CTL_OIDC_CLIENT_SECRET")

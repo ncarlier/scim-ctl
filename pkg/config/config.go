@@ -11,6 +11,7 @@ import (
 type Config struct {
 	Target       string            `mapstructure:"target"`
 	Verbose      bool              `mapstructure:"verbose"`
+	Timeout      int               `mapstructure:"timeout"`
 	OIDC         OIDC              `mapstructure:"oidc"`
 	CacheDir     string            `mapstructure:"cache-dir"`
 	ExtraHeaders map[string]string `mapstructure:"extra-headers"`

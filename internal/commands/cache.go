@@ -38,6 +38,7 @@ var cacheClearCmd = &cobra.Command{
 			GrantType:    cfg.OIDC.GrantType,
 			Scopes:       []string{"openid", "profile"},
 			CacheDir:     cfg.CacheDir,
+			Timeout:      time.Duration(cfg.Timeout) * time.Second,
 		}
 
 		authenticator := auth.NewAuthenticator(authConfig)
@@ -68,6 +69,7 @@ var cacheInfoCmd = &cobra.Command{
 			GrantType:    cfg.OIDC.GrantType,
 			Scopes:       []string{"openid", "profile"},
 			CacheDir:     cfg.CacheDir,
+			Timeout:      time.Duration(cfg.Timeout) * time.Second,
 		}
 
 		authenticator := auth.NewAuthenticator(authConfig)

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/ncarlier/scim-ctl/pkg/common"
 )
 
 // Default valifdity time window for tokens
@@ -25,6 +26,7 @@ type AuthConfig struct {
 	GrantType    string
 	Scopes       []string
 	CacheDir     string
+	Timeout      time.Duration
 }
 
 // DeviceCodeResponse represents the device code response
@@ -86,9 +88,15 @@ func NewAuthenticator(config *AuthConfig) *Authenticator {
 	// Create a unique cache file name based on issuer and client_id
 	cacheFile := fmt.Sprintf("%s/token_%x.json", cacheDir, hashConfig(config))
 
+	// Set default timeout if not provided
+	timeout := config.Timeout
+	if timeout == 0 {
+		timeout = common.DefaultHTTPClientTimeout
+	}
+
 	return &Authenticator{
 		config:    config,
-		client:    &http.Client{Timeout: 30 * time.Second},
+		client:    &http.Client{Timeout: timeout},
 		cacheFile: cacheFile,
 	}
 }

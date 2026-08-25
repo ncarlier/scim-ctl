@@ -17,6 +17,7 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/ncarlier/scim-ctl/pkg/auth"
+	"github.com/ncarlier/scim-ctl/pkg/common"
 	"github.com/ncarlier/scim-ctl/pkg/config"
 )
 
@@ -115,10 +116,15 @@ func NewClient(cfg *config.Config) (*Client, error) {
 		return nil, err
 	}
 
+	timeout := time.Duration(cfg.Timeout) * time.Second
+	if timeout == 0 {
+		timeout = common.DefaultHTTPClientTimeout
+	}
+
 	return &Client{
 		baseURL: strings.TrimSuffix(cfg.Target, "/"),
 		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: timeout,
 		},
 		verbose:      cfg.Verbose,
 		extraHeaders: cfg.ExtraHeaders,
@@ -134,6 +140,7 @@ func (c *Client) Authenticate(ctx context.Context, cfg *config.Config) error {
 		GrantType:    cfg.OIDC.GrantType,
 		Scopes:       []string{"openid", "profile", "email"},
 		CacheDir:     cfg.CacheDir,
+		Timeout:      time.Duration(cfg.Timeout) * time.Second,
 	}
 
 	authenticator := auth.NewAuthenticator(authConfig)
