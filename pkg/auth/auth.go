@@ -27,6 +27,8 @@ type AuthConfig struct {
 	Scopes       []string
 	CacheDir     string
 	Timeout      time.Duration
+	MaxRetries   int
+	Verbose      bool
 }
 
 // DeviceCodeResponse represents the device code response
@@ -95,8 +97,15 @@ func NewAuthenticator(config *AuthConfig) *Authenticator {
 	}
 
 	return &Authenticator{
-		config:    config,
-		client:    &http.Client{Timeout: timeout},
+		config: config,
+		client: &http.Client{
+			Timeout: timeout,
+			Transport: &common.RetryTransport{
+				Transport:  http.DefaultTransport,
+				MaxRetries: config.MaxRetries,
+				Verbose:    config.Verbose,
+			},
+		},
 		cacheFile: cacheFile,
 	}
 }

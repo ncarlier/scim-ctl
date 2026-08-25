@@ -125,6 +125,11 @@ func NewClient(cfg *config.Config) (*Client, error) {
 		baseURL: strings.TrimSuffix(cfg.Target, "/"),
 		httpClient: &http.Client{
 			Timeout: timeout,
+			Transport: &common.RetryTransport{
+				Transport:  http.DefaultTransport,
+				MaxRetries: cfg.MaxRetries,
+				Verbose:    cfg.Verbose,
+			},
 		},
 		verbose:      cfg.Verbose,
 		extraHeaders: cfg.ExtraHeaders,
@@ -141,6 +146,8 @@ func (c *Client) Authenticate(ctx context.Context, cfg *config.Config) error {
 		Scopes:       []string{"openid", "profile", "email"},
 		CacheDir:     cfg.CacheDir,
 		Timeout:      time.Duration(cfg.Timeout) * time.Second,
+		MaxRetries:   cfg.MaxRetries,
+		Verbose:      cfg.Verbose,
 	}
 
 	authenticator := auth.NewAuthenticator(authConfig)
