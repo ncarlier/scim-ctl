@@ -213,6 +213,29 @@ Data can also be provided via STDIN:
 cat users.jsonl | scim-ctl import -r user --chunk 100
 ```
 
+### Bulk Update (`bulk-update`)
+
+Update SCIM resources on the server using the Bulk API (PATCH operations).
+The input data should be a stream of JSON Lines.
+Each line must contain the resource "id" and an array of "operations".
+
+```bash
+scim-ctl bulk-update --resource user --file updates.jsonl
+scim-ctl bulk-update -r user -f updates.jsonl --chunk 50
+```
+
+| Parameter         | Alias | Description                     |
+| ----------------- | ----- | ------------------------------- |
+| `--resource`      | `-r`  | SCIM resource type (required)   |
+| `--file`          | `-f`  | Input JSON Lines file path      |
+| `--chunk`         | n/a   | Chunk size for bulk requests (default: 100) |
+
+Data can also be provided via STDIN:
+
+```bash
+cat updates.jsonl | scim-ctl bulk-update -r user --chunk 100
+```
+
 ## Examples and Usage Guides
 
 The `examples/` directory contains comprehensive SCIM JSON examples and detailed usage instructions:
