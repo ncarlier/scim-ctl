@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/ncarlier/scim-ctl/pkg/config"
 	"github.com/ncarlier/scim-ctl/pkg/scim"
@@ -49,13 +50,25 @@ Examples:
 			return fmt.Errorf("authentication failed: %w", err)
 		}
 
+		// Detect if stdout is being redirected or piped
+		fileInfo, _ := os.Stdout.Stat()
+		isRedirected := (fileInfo.Mode() & os.ModeCharDevice) == 0
+
 		startIndex := 1
+		exportedCount := 0
+		lastReportedPercent := -1
+		totalResults := 0
 
 		for {
 			// Search for resources
 			results, err := client.SearchResources(ctx, exportResourceType, exportFilter, exportQuery, startIndex, exportItemsPerPage, exportSortBy, exportSortOrder, exportAttributes)
 			if err != nil {
 				return fmt.Errorf("failed to search resources at start index %d: %w", startIndex, err)
+			}
+
+			if startIndex == 1 && isRedirected {
+				totalResults = results.TotalResults
+				fmt.Fprintf(os.Stderr, "Total resources to export: %d\n", totalResults)
 			}
 
 			if len(results.Resources) == 0 {
@@ -69,10 +82,24 @@ Examples:
 					return fmt.Errorf("failed to marshal resource: %w", err)
 				}
 				fmt.Println(string(jsonData))
+
+				exportedCount++
+				
+				if isRedirected && totalResults > 0 {
+					currentPercent := (exportedCount * 100) / totalResults
+					if currentPercent > lastReportedPercent {
+						fmt.Fprintf(os.Stderr, "Exporting... %d%%\r", currentPercent)
+						lastReportedPercent = currentPercent
+					}
+				}
 			}
 
 			// Increment startIndex for the next page
 			startIndex += len(results.Resources)
+		}
+
+		if isRedirected {
+			fmt.Fprintln(os.Stderr)
 		}
 
 		return nil
