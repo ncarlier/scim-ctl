@@ -236,6 +236,29 @@ Data can also be provided via STDIN:
 cat updates.jsonl | scim-ctl bulk-update -r user --chunk 100
 ```
 
+### Bulk Delete (`bulk-delete`)
+
+Delete SCIM resources on the server using the Bulk API (DELETE operations).
+The input data should be a stream of JSON Lines.
+Each line must contain the resource "id".
+
+```bash
+scim-ctl bulk-delete --resource user --file deletes.jsonl
+scim-ctl bulk-delete -r user -f deletes.jsonl --chunk 50
+```
+
+| Parameter         | Alias | Description                     |
+| ----------------- | ----- | ------------------------------- |
+| `--resource`      | `-r`  | SCIM resource type (required)   |
+| `--file`          | `-f`  | Input JSON Lines file path      |
+| `--chunk`         | n/a   | Chunk size for bulk requests (default: 100) |
+
+Data can also be provided via STDIN:
+
+```bash
+cat deletes.jsonl | scim-ctl bulk-delete -r user --chunk 100
+```
+
 ## Examples and Usage Guides
 
 The `examples/` directory contains comprehensive SCIM JSON examples and detailed usage instructions:
