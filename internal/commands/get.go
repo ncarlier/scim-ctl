@@ -11,9 +11,10 @@ import (
 )
 
 var (
-	getResourceType string
-	getID           string
-	getAttributes   []string
+	getResourceType      string
+	getID                string
+	getAttributes        []string
+	getExcludedAttributes []string
 )
 
 // getCmd represents the get command
@@ -44,7 +45,7 @@ Examples:
 		}
 
 		// Get the resource
-		resource, err := client.GetResource(ctx, getResourceType, getID, getAttributes)
+		resource, err := client.GetResource(ctx, getResourceType, getID, getAttributes, getExcludedAttributes)
 		if err != nil {
 			return fmt.Errorf("failed to get resource: %w", err)
 		}
@@ -66,6 +67,7 @@ func init() {
 	getCmd.Flags().StringVarP(&getResourceType, "resource", "r", "", "SCIM resource type (required)")
 	getCmd.Flags().StringVar(&getID, "id", "", "SCIM resource identifier (required)")
 	getCmd.Flags().StringSliceVarP(&getAttributes, "attributes", "a", []string{}, "Comma-separated list of attributes to return")
+	getCmd.Flags().StringSliceVarP(&getExcludedAttributes, "excluded-attributes", "e", []string{}, "Comma-separated list of attributes to exclude")
 	getCmd.MarkFlagRequired("resource")
 	getCmd.MarkFlagRequired("id")
 }

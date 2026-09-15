@@ -19,6 +19,7 @@ var (
 	searchSortBy       string
 	searchSortOrder    string
 	searchAttributes   []string
+	searchExcludedAttributes []string
 )
 
 // searchCmd represents the search command
@@ -52,7 +53,7 @@ Examples:
 		}
 
 		// Search for resources
-		results, err := client.SearchResources(ctx, searchResourceType, searchFilter, searchQuery, searchStartIndex, searchItemsPerPage, searchSortBy, searchSortOrder, searchAttributes)
+		results, err := client.SearchResources(ctx, searchResourceType, searchFilter, searchQuery, searchStartIndex, searchItemsPerPage, searchSortBy, searchSortOrder, searchAttributes, searchExcludedAttributes)
 		if err != nil {
 			return fmt.Errorf("failed to search resources: %w", err)
 		}
@@ -79,5 +80,6 @@ func init() {
 	searchCmd.Flags().StringVar(&searchSortBy, "sort-by", "", "Attribute to sort by (e.g., userName, meta.created)")
 	searchCmd.Flags().StringVar(&searchSortOrder, "sort-order", "", "Sort order: ascending or descending")
 	searchCmd.Flags().StringSliceVarP(&searchAttributes, "attributes", "a", []string{}, "Comma-separated list of attributes to return")
+	searchCmd.Flags().StringSliceVarP(&searchExcludedAttributes, "excluded-attributes", "e", []string{}, "Comma-separated list of attributes to exclude")
 	searchCmd.MarkFlagRequired("resource")
 }

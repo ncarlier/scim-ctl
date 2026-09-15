@@ -10,7 +10,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var meAttributes []string
+var (
+	meAttributes         []string
+	meExcludedAttributes []string
+)
 
 // meCmd represents the me command
 var meCmd = &cobra.Command{
@@ -39,7 +42,7 @@ Examples:
 		}
 
 		// Get the current user
-		resource, err := client.GetResource(ctx, "Me", "", meAttributes)
+		resource, err := client.GetResource(ctx, "Me", "", meAttributes, meExcludedAttributes)
 		if err != nil {
 			return fmt.Errorf("failed to get /Me resource: %w", err)
 		}
@@ -58,4 +61,5 @@ Examples:
 func init() {
 	rootCmd.AddCommand(meCmd)
 	meCmd.Flags().StringSliceVarP(&meAttributes, "attributes", "a", []string{}, "Comma-separated list of attributes to return")
+	meCmd.Flags().StringSliceVarP(&meExcludedAttributes, "excluded-attributes", "e", []string{}, "Comma-separated list of attributes to exclude")
 }

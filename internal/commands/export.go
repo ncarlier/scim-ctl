@@ -19,6 +19,7 @@ var (
 	exportSortBy       string
 	exportSortOrder    string
 	exportAttributes   []string
+	exportExcludedAttributes []string
 )
 
 // exportCmd represents the export command
@@ -61,7 +62,7 @@ Examples:
 
 		for {
 			// Search for resources
-			results, err := client.SearchResources(ctx, exportResourceType, exportFilter, exportQuery, startIndex, exportItemsPerPage, exportSortBy, exportSortOrder, exportAttributes)
+			results, err := client.SearchResources(ctx, exportResourceType, exportFilter, exportQuery, startIndex, exportItemsPerPage, exportSortBy, exportSortOrder, exportAttributes, exportExcludedAttributes)
 			if err != nil {
 				return fmt.Errorf("failed to search resources at start index %d: %w", startIndex, err)
 			}
@@ -116,5 +117,6 @@ func init() {
 	exportCmd.Flags().StringVar(&exportSortBy, "sort-by", "", "Attribute to sort by (e.g., userName, meta.created)")
 	exportCmd.Flags().StringVar(&exportSortOrder, "sort-order", "", "Sort order: ascending or descending")
 	exportCmd.Flags().StringSliceVarP(&exportAttributes, "attributes", "a", []string{}, "Comma-separated list of attributes to return")
+	exportCmd.Flags().StringSliceVarP(&exportExcludedAttributes, "excluded-attributes", "e", []string{}, "Comma-separated list of attributes to exclude")
 	exportCmd.MarkFlagRequired("resource")
 }

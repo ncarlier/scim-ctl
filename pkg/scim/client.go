@@ -217,7 +217,7 @@ func (c *Client) CreateResource(ctx context.Context, resourceType string, data R
 }
 
 // GetResource retrieves a SCIM resource by ID
-func (c *Client) GetResource(ctx context.Context, resourceType, id string, attributes []string) (Resource, error) {
+func (c *Client) GetResource(ctx context.Context, resourceType, id string, attributes []string, excludedAttributes []string) (Resource, error) {
 	baseURL := c.baseURL + "/" + ResourceName(resourceType)
 	if id != "" {
 		baseURL += "/" + id
@@ -229,11 +229,14 @@ func (c *Client) GetResource(ctx context.Context, resourceType, id string, attri
 	}
 
 	// Add attributes query parameter if specified
+	query := u.Query()
 	if len(attributes) > 0 {
-		query := u.Query()
 		query.Set("attributes", strings.Join(attributes, ","))
-		u.RawQuery = query.Encode()
 	}
+	if len(excludedAttributes) > 0 {
+		query.Set("excludedAttributes", strings.Join(excludedAttributes, ","))
+	}
+	u.RawQuery = query.Encode()
 
 	resp, err := c.doRequest(ctx, "GET", u.String(), nil)
 	if err != nil {
@@ -306,7 +309,7 @@ func (c *Client) DeleteResource(ctx context.Context, resourceType, id string) er
 }
 
 // SearchResources searches SCIM resources
-func (c *Client) SearchResources(ctx context.Context, resourceType string, filter string, query string, startIndex, count int, sortBy, sortOrder string, attributes []string) (*ListResponse, error) {
+func (c *Client) SearchResources(ctx context.Context, resourceType string, filter string, query string, startIndex, count int, sortBy, sortOrder string, attributes []string, excludedAttributes []string) (*ListResponse, error) {
 	baseURL := c.baseURL + "/" + ResourceName(resourceType)
 
 	// Use URL parameters for GET request
@@ -336,6 +339,9 @@ func (c *Client) SearchResources(ctx context.Context, resourceType string, filte
 	}
 	if len(attributes) > 0 {
 		queryParams.Set("attributes", strings.Join(attributes, ","))
+	}
+	if len(excludedAttributes) > 0 {
+		queryParams.Set("excludedAttributes", strings.Join(excludedAttributes, ","))
 	}
 	u.RawQuery = queryParams.Encode()
 
