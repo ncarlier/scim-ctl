@@ -1,4 +1,11 @@
+# Private files (e.g., environment variables, credentials, local settings, ...))
 .env
-release/
 config/
 scim-ctl.yml
+tmp/
+
+# Build files
+release/
+
+# Misc
+AGENTS.md
