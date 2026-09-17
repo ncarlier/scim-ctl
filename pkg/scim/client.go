@@ -143,7 +143,7 @@ func (c *Client) Authenticate(ctx context.Context, cfg *config.Config) error {
 		ClientID:     cfg.OIDC.ClientID,
 		ClientSecret: cfg.OIDC.ClientSecret,
 		GrantType:    cfg.OIDC.GrantType,
-		Scopes:       []string{"openid", "profile", "email"},
+		Scopes:       []string{"openid"},
 		CacheDir:     cfg.CacheDir,
 		Timeout:      time.Duration(cfg.Timeout) * time.Second,
 		MaxRetries:   cfg.MaxRetries,
