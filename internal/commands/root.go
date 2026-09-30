@@ -50,7 +50,7 @@ There is NO WARRANTY, to the extent permitted by law.
 `, version.GitCommit, version.Built))
 
 	// Global flags
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./scim-ctl.yml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./scim-ctl.yml, env: SCIM_CTL_CONFIG)")
 	rootCmd.PersistentFlags().StringVar(&target, "target", "", "SCIM target URL (env: SCIM_CTL_TARGET)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().IntVar(&timeout, "timeout", 30, "HTTP request timeout in seconds (env: SCIM_CTL_TIMEOUT)")
@@ -91,6 +91,10 @@ There is NO WARRANTY, to the extent permitted by law.
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	if cfgFile == "" {
+		cfgFile = os.Getenv("SCIM_CTL_CONFIG")
+	}
+
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {
