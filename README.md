@@ -35,8 +35,10 @@ scim-ctl --target http://example.com/scim/v2 schemas
 
 ## Authentication
 
-The CLI authenticates to the SCIM server using a **Bearer Token** of type **JWT OpenID Connect**.
-It obtains the Access Token from an OIDC provider using the OAuth 2.0 Device Authorization Grant.
+Authentication is **optional**. When omitted, `scim-ctl` sends requests without authentication headers, which is useful for local development, unauthenticated servers, or when passing authentication headers manually via `--extra-header`.
+
+When authentication is configured, the CLI authenticates to the SCIM server using a **Bearer Token** of type **JWT OpenID Connect**.
+It obtains the Access Token from an OIDC provider using OAuth 2.0 (Device Authorization Grant or Client Credentials Grant).
 
 **Configuration:**
 
@@ -48,7 +50,7 @@ It obtains the Access Token from an OIDC provider using the OAuth 2.0 Device Aut
 | `--oidc-grant-type`     | `SCIM_CTL_OIDC_GRANT_TYPE`     | Grant Type            |
 | `--extra-header`        | -                              | Extra HTTP headers (format: `key=value`, can be specified multiple times) |
 
-Supported grant type are `client_credentials` or `device_code` (default).
+Supported grant types are `client_credentials` or `device_code` (default).
 
 ## Configuration File
 

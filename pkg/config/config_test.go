@@ -22,6 +22,13 @@ func TestConfigValidation(t *testing.T) {
 			wantError: false,
 		},
 		{
+			name: "valid config without authentication",
+			config: Config{
+				Target: "https://example.com/scim/v2",
+			},
+			wantError: false,
+		},
+		{
 			name: "missing target",
 			config: Config{
 				OIDC: OIDC{
@@ -83,6 +90,63 @@ func TestConfigValidation(t *testing.T) {
 			err := tt.config.Validate()
 			if (err != nil) != tt.wantError {
 				t.Errorf("Config.Validate() error = %v, wantError %v", err, tt.wantError)
+			}
+		})
+	}
+}
+
+func TestConfigHasAuth(t *testing.T) {
+	tests := []struct {
+		name     string
+		config   Config
+		wantAuth bool
+	}{
+		{
+			name:     "empty config",
+			config:   Config{},
+			wantAuth: false,
+		},
+		{
+			name: "target only",
+			config: Config{
+				Target: "https://example.com/scim/v2",
+			},
+			wantAuth: false,
+		},
+		{
+			name: "issuer only",
+			config: Config{
+				OIDC: OIDC{
+					Issuer: "https://auth.example.com",
+				},
+			},
+			wantAuth: true,
+		},
+		{
+			name: "client ID only",
+			config: Config{
+				OIDC: OIDC{
+					ClientID: "test-client",
+				},
+			},
+			wantAuth: true,
+		},
+		{
+			name: "full auth config",
+			config: Config{
+				OIDC: OIDC{
+					Issuer:   "https://auth.example.com",
+					ClientID: "test-client",
+				},
+			},
+			wantAuth: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.config.HasAuth(); got != tt.wantAuth {
+				t.Errorf("Config.HasAuth() = %v, want %v", got, tt.wantAuth)
 			}
 		})
 	}

@@ -35,22 +35,29 @@ func Get() (*Config, error) {
 	return &cfg, nil
 }
 
+// HasAuth checks if authentication is configured
+func (c *Config) HasAuth() bool {
+	return c.OIDC.Issuer != "" || c.OIDC.ClientID != ""
+}
+
 // Validate checks if the configuration is valid
 func (c *Config) Validate() error {
 	if c.Target == "" {
 		return errors.New("SCIM target URL is required")
 	}
 
-	if c.OIDC.Issuer == "" {
-		return errors.New("OIDC issuer is required")
-	}
+	if c.HasAuth() {
+		if c.OIDC.Issuer == "" {
+			return errors.New("OIDC issuer is required")
+		}
 
-	if c.OIDC.ClientID == "" {
-		return errors.New("OIDC client ID is required")
-	}
+		if c.OIDC.ClientID == "" {
+			return errors.New("OIDC client ID is required")
+		}
 
-	if c.OIDC.GrantType == "client_credentials" && c.OIDC.ClientSecret == "" {
-		return errors.New("OIDC client secret is required for client_credentials grant type")
+		if c.OIDC.GrantType == "client_credentials" && c.OIDC.ClientSecret == "" {
+			return errors.New("OIDC client secret is required for client_credentials grant type")
+		}
 	}
 
 	return nil

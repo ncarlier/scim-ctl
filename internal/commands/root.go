@@ -28,7 +28,7 @@ var rootCmd = &cobra.Command{
 	Use:     "scim-ctl",
 	Short:   "A CLI tool for SCIM (System for Cross-domain Identity Management) operations",
 	Long:    `scim-ctl is a CLI tool for interacting with a SCIM server. It supports CRUD operations
-and uses OAuth 2.0 Device Authorization Grant for authentication.`,
+and optionally uses OAuth 2.0 (Device Authorization Grant or Client Credentials) for authentication.`,
 	Version: version.Version,
 }
 

@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -29,6 +30,10 @@ var cacheClearCmd = &cobra.Command{
 		cfg, err := config.Get()
 		if err != nil {
 			return fmt.Errorf("failed to get configuration: %w", err)
+		}
+
+		if !cfg.HasAuth() {
+			return errors.New("authentication is not configured")
 		}
 
 		authConfig := &auth.AuthConfig{
@@ -60,6 +65,10 @@ var cacheInfoCmd = &cobra.Command{
 		cfg, err := config.Get()
 		if err != nil {
 			return fmt.Errorf("failed to get configuration: %w", err)
+		}
+
+		if !cfg.HasAuth() {
+			return errors.New("authentication is not configured")
 		}
 
 		authConfig := &auth.AuthConfig{

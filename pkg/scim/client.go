@@ -136,8 +136,12 @@ func NewClient(cfg *config.Config) (*Client, error) {
 	}, nil
 }
 
-// Authenticate performs OAuth 2.0 Device Grant authentication
+// Authenticate performs OAuth 2.0 authentication if configured
 func (c *Client) Authenticate(ctx context.Context, cfg *config.Config) error {
+	if !cfg.HasAuth() {
+		return nil
+	}
+
 	authConfig := &auth.AuthConfig{
 		Issuer:       cfg.OIDC.Issuer,
 		ClientID:     cfg.OIDC.ClientID,
@@ -160,6 +164,11 @@ func (c *Client) Authenticate(ctx context.Context, cfg *config.Config) error {
 	c.authenticator = authenticator
 	c.authConfig = authConfig
 	return nil
+}
+
+// HasAuth returns true if the client is configured with authentication
+func (c *Client) HasAuth() bool {
+	return c.authenticator != nil
 }
 
 // GetSchemas retrieves SCIM schemas
