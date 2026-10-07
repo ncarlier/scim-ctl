@@ -60,9 +60,14 @@ Examples:
 		lastReportedPercent := -1
 		totalResults := 0
 
+		var count *int
+		if cmd.Flags().Changed("items-per-page") {
+			count = &exportItemsPerPage
+		}
+
 		for {
 			// Search for resources
-			results, err := client.SearchResources(ctx, exportResourceType, exportFilter, exportQuery, startIndex, exportItemsPerPage, exportSortBy, exportSortOrder, exportAttributes, exportExcludedAttributes)
+			results, err := client.SearchResources(ctx, exportResourceType, exportFilter, exportQuery, startIndex, count, exportSortBy, exportSortOrder, exportAttributes, exportExcludedAttributes)
 			if err != nil {
 				return fmt.Errorf("failed to search resources at start index %d: %w", startIndex, err)
 			}

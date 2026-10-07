@@ -318,7 +318,7 @@ func (c *Client) DeleteResource(ctx context.Context, resourceType, id string) er
 }
 
 // SearchResources searches SCIM resources
-func (c *Client) SearchResources(ctx context.Context, resourceType string, filter string, query string, startIndex, count int, sortBy, sortOrder string, attributes []string, excludedAttributes []string) (*ListResponse, error) {
+func (c *Client) SearchResources(ctx context.Context, resourceType string, filter string, query string, startIndex int, count *int, sortBy, sortOrder string, attributes []string, excludedAttributes []string) (*ListResponse, error) {
 	baseURL := c.baseURL + "/" + ResourceName(resourceType)
 
 	// Use URL parameters for GET request
@@ -337,8 +337,8 @@ func (c *Client) SearchResources(ctx context.Context, resourceType string, filte
 	if startIndex > 0 {
 		queryParams.Set("startIndex", fmt.Sprintf("%d", startIndex))
 	}
-	if count > 0 {
-		queryParams.Set("count", fmt.Sprintf("%d", count))
+	if count != nil {
+		queryParams.Set("count", fmt.Sprintf("%d", *count))
 	}
 	if sortBy != "" {
 		queryParams.Set("sortBy", sortBy)

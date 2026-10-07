@@ -53,7 +53,12 @@ Examples:
 		}
 
 		// Search for resources
-		results, err := client.SearchResources(ctx, searchResourceType, searchFilter, searchQuery, searchStartIndex, searchItemsPerPage, searchSortBy, searchSortOrder, searchAttributes, searchExcludedAttributes)
+		var count *int
+		if cmd.Flags().Changed("items-per-page") {
+			count = &searchItemsPerPage
+		}
+
+		results, err := client.SearchResources(ctx, searchResourceType, searchFilter, searchQuery, searchStartIndex, count, searchSortBy, searchSortOrder, searchAttributes, searchExcludedAttributes)
 		if err != nil {
 			return fmt.Errorf("failed to search resources: %w", err)
 		}
