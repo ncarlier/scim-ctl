@@ -85,9 +85,11 @@ Examples:
 			}
 
 			if isFirstPage {
-				totalResults = results.TotalResults
-				if isRedirected {
-					fmt.Fprintf(os.Stderr, "Total resources to export: %d\n", totalResults)
+				if results.TotalResults > 0 {
+					totalResults = results.TotalResults
+					if isRedirected {
+						fmt.Fprintf(os.Stderr, "Total resources to export: %d\n", totalResults)
+					}
 				}
 				isFirstPage = false
 			}
@@ -106,11 +108,15 @@ Examples:
 
 				exportedCount++
 				
-				if isRedirected && totalResults > 0 {
-					currentPercent := (exportedCount * 100) / totalResults
-					if currentPercent > lastReportedPercent {
-						fmt.Fprintf(os.Stderr, "Exporting... %d%%\r", currentPercent)
-						lastReportedPercent = currentPercent
+				if isRedirected {
+					if totalResults > 0 {
+						currentPercent := (exportedCount * 100) / totalResults
+						if currentPercent > lastReportedPercent {
+							fmt.Fprintf(os.Stderr, "Exporting... %d%%\r", currentPercent)
+							lastReportedPercent = currentPercent
+						}
+					} else {
+						fmt.Fprintf(os.Stderr, "Exporting... %d resources\r", exportedCount)
 					}
 				}
 			}
