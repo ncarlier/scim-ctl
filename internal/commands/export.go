@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/ncarlier/scim-ctl/pkg/config"
 	"github.com/ncarlier/scim-ctl/pkg/scim"
@@ -17,9 +18,10 @@ var (
 	exportQuery        string
 	exportItemsPerPage int
 	exportSortBy       string
-	exportSortOrder    string
-	exportAttributes   []string
+	exportSortOrder          string
+	exportAttributes         []string
 	exportExcludedAttributes []string
+	exportUseCursor          bool
 )
 
 // exportCmd represents the export command
@@ -34,7 +36,8 @@ Examples:
   scim-ctl export --resource user --filter 'userName eq "bob"'
   scim-ctl export -r group -f 'displayName co "admin"' --items-per-page 100
   scim-ctl export -r user --sort-by meta.created --sort-order descending
-  scim-ctl export -r user -f 'active eq true' --attributes userName,emails`,
+  scim-ctl export -r user -f 'active eq true' --attributes userName,emails
+  scim-ctl export -r user --use-cursor`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Get()
 		if err != nil {
@@ -59,17 +62,39 @@ Examples:
 		exportedCount := 0
 		lastReportedPercent := -1
 		totalResults := 0
+		isFirstPage := true
+
+		var currentCursor *string
+		if exportUseCursor {
+			emptyCursor := ""
+			currentCursor = &emptyCursor
+		}
+
+		var count *int
+		if cmd.Flags().Changed("items-per-page") {
+			count = &exportItemsPerPage
+		}
+
+		startTime := time.Now()
 
 		for {
 			// Search for resources
-			results, err := client.SearchResources(ctx, exportResourceType, exportFilter, exportQuery, startIndex, exportItemsPerPage, exportSortBy, exportSortOrder, exportAttributes, exportExcludedAttributes)
+			results, err := client.SearchResources(ctx, exportResourceType, exportFilter, exportQuery, startIndex, count, exportSortBy, exportSortOrder, exportAttributes, exportExcludedAttributes, currentCursor)
 			if err != nil {
+				if exportUseCursor {
+					return fmt.Errorf("failed to search resources with cursor: %w", err)
+				}
 				return fmt.Errorf("failed to search resources at start index %d: %w", startIndex, err)
 			}
 
-			if startIndex == 1 && isRedirected {
-				totalResults = results.TotalResults
-				fmt.Fprintf(os.Stderr, "Total resources to export: %d\n", totalResults)
+			if isFirstPage {
+				if results.TotalResults > 0 {
+					totalResults = results.TotalResults
+					if isRedirected {
+						fmt.Fprintf(os.Stderr, "Total resources to export: %d\n", totalResults)
+					}
+				}
+				isFirstPage = false
 			}
 
 			if len(results.Resources) == 0 {
@@ -86,17 +111,31 @@ Examples:
 
 				exportedCount++
 				
-				if isRedirected && totalResults > 0 {
-					currentPercent := (exportedCount * 100) / totalResults
-					if currentPercent > lastReportedPercent {
-						fmt.Fprintf(os.Stderr, "Exporting... %d%%\r", currentPercent)
-						lastReportedPercent = currentPercent
+				if isRedirected {
+					if totalResults > 0 {
+						currentPercent := (exportedCount * 100) / totalResults
+						if currentPercent > lastReportedPercent {
+							elapsed := time.Since(startTime)
+							eta := time.Duration(float64(elapsed) / float64(exportedCount) * float64(totalResults-exportedCount)).Round(time.Second)
+							fmt.Fprintf(os.Stderr, "Exporting... %d%% (ETA: %v)\033[K\r", currentPercent, eta)
+							lastReportedPercent = currentPercent
+						}
+					} else {
+						elapsed := time.Since(startTime).Round(time.Second)
+						fmt.Fprintf(os.Stderr, "Exporting... %d resources (Elapsed: %v)\033[K\r", exportedCount, elapsed)
 					}
 				}
 			}
 
-			// Increment startIndex for the next page
-			startIndex += len(results.Resources)
+			if exportUseCursor {
+				if results.NextCursor == nil || *results.NextCursor == "" {
+					break
+				}
+				currentCursor = results.NextCursor
+			} else {
+				// Increment startIndex for the next page
+				startIndex += len(results.Resources)
+			}
 		}
 
 		if isRedirected {
@@ -118,5 +157,6 @@ func init() {
 	exportCmd.Flags().StringVar(&exportSortOrder, "sort-order", "", "Sort order: ascending or descending")
 	exportCmd.Flags().StringSliceVarP(&exportAttributes, "attributes", "a", []string{}, "Comma-separated list of attributes to return")
 	exportCmd.Flags().StringSliceVarP(&exportExcludedAttributes, "excluded-attributes", "e", []string{}, "Comma-separated list of attributes to exclude")
+	exportCmd.Flags().BoolVar(&exportUseCursor, "use-cursor", false, "Use cursor-based pagination (RFC 9865)")
 	exportCmd.MarkFlagRequired("resource")
 }

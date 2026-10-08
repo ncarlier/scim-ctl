@@ -17,9 +17,11 @@ var (
 	searchStartIndex   int
 	searchItemsPerPage int
 	searchSortBy       string
-	searchSortOrder    string
-	searchAttributes   []string
+	searchSortOrder          string
+	searchAttributes         []string
 	searchExcludedAttributes []string
+	searchCursor             string
+	searchUseCursor          bool
 )
 
 // searchCmd represents the search command
@@ -35,7 +37,9 @@ Examples:
   scim-ctl search -r user -f 'active eq true' --sort-by userName --sort-order ascending
   scim-ctl search -r user --sort-by meta.created --sort-order descending
   scim-ctl search -r user -f 'active eq true' --attributes userName,emails
-  scim-ctl search -r user --attributes userName --attributes emails`,
+  scim-ctl search -r user --attributes userName --attributes emails
+  scim-ctl search -r user --use-cursor
+  scim-ctl search -r user --cursor "opaque-cursor-value"`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := config.Get()
 		if err != nil {
@@ -53,7 +57,20 @@ Examples:
 		}
 
 		// Search for resources
-		results, err := client.SearchResources(ctx, searchResourceType, searchFilter, searchQuery, searchStartIndex, searchItemsPerPage, searchSortBy, searchSortOrder, searchAttributes, searchExcludedAttributes)
+		var count *int
+		if cmd.Flags().Changed("items-per-page") {
+			count = &searchItemsPerPage
+		}
+
+		var cursorPtr *string
+		if cmd.Flags().Changed("cursor") {
+			cursorPtr = &searchCursor
+		} else if searchUseCursor {
+			emptyCursor := ""
+			cursorPtr = &emptyCursor
+		}
+
+		results, err := client.SearchResources(ctx, searchResourceType, searchFilter, searchQuery, searchStartIndex, count, searchSortBy, searchSortOrder, searchAttributes, searchExcludedAttributes, cursorPtr)
 		if err != nil {
 			return fmt.Errorf("failed to search resources: %w", err)
 		}
@@ -81,5 +98,7 @@ func init() {
 	searchCmd.Flags().StringVar(&searchSortOrder, "sort-order", "", "Sort order: ascending or descending")
 	searchCmd.Flags().StringSliceVarP(&searchAttributes, "attributes", "a", []string{}, "Comma-separated list of attributes to return")
 	searchCmd.Flags().StringSliceVarP(&searchExcludedAttributes, "excluded-attributes", "e", []string{}, "Comma-separated list of attributes to exclude")
+	searchCmd.Flags().StringVar(&searchCursor, "cursor", "", "Cursor for cursor-based pagination (RFC 9865)")
+	searchCmd.Flags().BoolVar(&searchUseCursor, "use-cursor", false, "Use cursor-based pagination (RFC 9865)")
 	searchCmd.MarkFlagRequired("resource")
 }

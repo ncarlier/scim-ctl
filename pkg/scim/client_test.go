@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/ncarlier/scim-ctl/pkg/config"
@@ -92,5 +93,181 @@ func TestClientWithoutAuthWithExtraHeader(t *testing.T) {
 
 	if receivedAuthHeader != "Bearer static-token" {
 		t.Errorf("received Authorization header = %q, want 'Bearer static-token'", receivedAuthHeader)
+	}
+}
+
+func TestSearchResourcesCountParam(t *testing.T) {
+	tests := []struct {
+		name          string
+		count         *int
+		wantHasCount  bool
+		wantCountVal  string
+	}{
+		{
+			name:         "count nil (not provided)",
+			count:        nil,
+			wantHasCount: false,
+		},
+		{
+			name:         "count 0 (count only)",
+			count:        intPtr(0),
+			wantHasCount: true,
+			wantCountVal: "0",
+		},
+		{
+			name:         "count 10",
+			count:        intPtr(10),
+			wantHasCount: true,
+			wantCountVal: "10",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var receivedURL string
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				receivedURL = r.URL.String()
+				w.Header().Set("Content-Type", "application/scim+json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(`{"schemas":["urn:ietf:params:scim:api:messages:2.0:ListResponse"],"totalResults":42,"itemsPerPage":0,"startIndex":1,"Resources":[]}`))
+			}))
+			defer server.Close()
+
+			cfg := &config.Config{
+				Target:  server.URL,
+				Timeout: 5,
+			}
+			client, err := NewClient(cfg)
+			if err != nil {
+				t.Fatalf("NewClient() failed: %v", err)
+			}
+
+			_, err = client.SearchResources(context.Background(), "Users", "", "", 0, tt.count, "", "", nil, nil, nil)
+			if err != nil {
+				t.Fatalf("SearchResources() failed: %v", err)
+			}
+
+			u, err := url.Parse(receivedURL)
+			if err != nil {
+				t.Fatalf("failed to parse received URL: %v", err)
+			}
+
+			hasCount := u.Query().Has("count")
+			if hasCount != tt.wantHasCount {
+				t.Errorf("has count query param = %v, want %v", hasCount, tt.wantHasCount)
+			}
+			if tt.wantHasCount {
+				gotVal := u.Query().Get("count")
+				if gotVal != tt.wantCountVal {
+					t.Errorf("count query param = %q, want %q", gotVal, tt.wantCountVal)
+				}
+			}
+		})
+	}
+}
+
+func intPtr(i int) *int {
+	return &i
+}
+
+func strPtr(s string) *string {
+	return &s
+}
+
+func TestSearchResourcesCursorParam(t *testing.T) {
+	tests := []struct {
+		name              string
+		cursor            *string
+		filter            string
+		wantHasCursor     bool
+		wantCursorVal     string
+		wantHasFilter     bool
+		wantNextCursor    *string
+		responseBody      string
+	}{
+		{
+			name:           "cursor nil (classic pagination)",
+			cursor:         nil,
+			filter:         "userName eq \"john\"",
+			wantHasCursor:  false,
+			wantHasFilter:  true,
+			responseBody:   `{"schemas":["urn:ietf:params:scim:api:messages:2.0:ListResponse"],"totalResults":1,"startIndex":1,"Resources":[]}`,
+		},
+		{
+			name:           "empty cursor (first cursor-based page)",
+			cursor:         strPtr(""),
+			filter:         "userName eq \"john\"",
+			wantHasCursor:  true,
+			wantCursorVal:  "",
+			wantHasFilter:  true,
+			wantNextCursor: strPtr("opaque-next-token"),
+			responseBody:   `{"schemas":["urn:ietf:params:scim:api:messages:2.0:ListResponse"],"totalResults":50,"nextCursor":"opaque-next-token","Resources":[{"id":"1"}]}`,
+		},
+		{
+			name:           "next cursor (subsequent cursor-based page)",
+			cursor:         strPtr("opaque-next-token"),
+			filter:         "userName eq \"john\"",
+			wantHasCursor:  true,
+			wantCursorVal:  "opaque-next-token",
+			wantHasFilter:  false, // RFC 9865: Only cursor parameter should be present
+			responseBody:   `{"schemas":["urn:ietf:params:scim:api:messages:2.0:ListResponse"],"nextCursor":"opaque-next-token-2","Resources":[{"id":"2"}]}`,
+			wantNextCursor: strPtr("opaque-next-token-2"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var receivedURL string
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				receivedURL = r.URL.String()
+				w.Header().Set("Content-Type", "application/scim+json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(tt.responseBody))
+			}))
+			defer server.Close()
+
+			cfg := &config.Config{
+				Target:  server.URL,
+				Timeout: 5,
+			}
+			client, err := NewClient(cfg)
+			if err != nil {
+				t.Fatalf("NewClient() failed: %v", err)
+			}
+
+			res, err := client.SearchResources(context.Background(), "Users", tt.filter, "", 0, nil, "", "", nil, nil, tt.cursor)
+			if err != nil {
+				t.Fatalf("SearchResources() failed: %v", err)
+			}
+
+			u, err := url.Parse(receivedURL)
+			if err != nil {
+				t.Fatalf("failed to parse received URL: %v", err)
+			}
+
+			hasCursor := u.Query().Has("cursor")
+			if hasCursor != tt.wantHasCursor {
+				t.Errorf("has cursor query param = %v, want %v", hasCursor, tt.wantHasCursor)
+			}
+			if tt.wantHasCursor {
+				gotCursor := u.Query().Get("cursor")
+				if gotCursor != tt.wantCursorVal {
+					t.Errorf("cursor query param = %q, want %q", gotCursor, tt.wantCursorVal)
+				}
+			}
+
+			hasFilter := u.Query().Has("filter")
+			if hasFilter != tt.wantHasFilter {
+				t.Errorf("has filter query param = %v, want %v", hasFilter, tt.wantHasFilter)
+			}
+
+			if tt.wantNextCursor == nil && res.NextCursor != nil {
+				t.Errorf("NextCursor = %v, want nil", *res.NextCursor)
+			} else if tt.wantNextCursor != nil {
+				if res.NextCursor == nil || *res.NextCursor != *tt.wantNextCursor {
+					t.Errorf("NextCursor = %v, want %v", res.NextCursor, *tt.wantNextCursor)
+				}
+			}
+		})
 	}
 }
