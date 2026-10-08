@@ -52,6 +52,7 @@ type ListResponse struct {
 	StartIndex   int        `json:"startIndex"`
 	ItemsPerPage int        `json:"itemsPerPage"`
 	Resources    []Resource `json:"Resources"`
+	NextCursor   *string    `json:"nextCursor,omitempty"`
 }
 
 // ErrorResponse represents a SCIM error response
@@ -318,7 +319,7 @@ func (c *Client) DeleteResource(ctx context.Context, resourceType, id string) er
 }
 
 // SearchResources searches SCIM resources
-func (c *Client) SearchResources(ctx context.Context, resourceType string, filter string, query string, startIndex int, count *int, sortBy, sortOrder string, attributes []string, excludedAttributes []string) (*ListResponse, error) {
+func (c *Client) SearchResources(ctx context.Context, resourceType string, filter string, query string, startIndex int, count *int, sortBy, sortOrder string, attributes []string, excludedAttributes []string, cursor *string) (*ListResponse, error) {
 	baseURL := c.baseURL + "/" + ResourceName(resourceType)
 
 	// Use URL parameters for GET request
@@ -328,29 +329,38 @@ func (c *Client) SearchResources(ctx context.Context, resourceType string, filte
 	}
 
 	queryParams := u.Query()
-	if filter != "" {
-		queryParams.Set("filter", filter)
-	}
-	if query != "" {
-		queryParams.Set("q", query)
-	}
-	if startIndex > 0 {
-		queryParams.Set("startIndex", fmt.Sprintf("%d", startIndex))
+	if cursor != nil && *cursor != "" {
+		// Subsequent cursor-based page: RFC 9865 expects ONLY the cursor query parameter
+		queryParams.Set("cursor", *cursor)
+	} else {
+		if cursor != nil {
+			// First cursor-based page: set empty cursor parameter to signal cursor pagination
+			queryParams.Set("cursor", "")
+		}
+		if filter != "" {
+			queryParams.Set("filter", filter)
+		}
+		if query != "" {
+			queryParams.Set("q", query)
+		}
+		if startIndex > 0 {
+			queryParams.Set("startIndex", fmt.Sprintf("%d", startIndex))
+		}
+		if sortBy != "" {
+			queryParams.Set("sortBy", sortBy)
+		}
+		if sortOrder != "" {
+			queryParams.Set("sortOrder", sortOrder)
+		}
+		if len(attributes) > 0 {
+			queryParams.Set("attributes", strings.Join(attributes, ","))
+		}
+		if len(excludedAttributes) > 0 {
+			queryParams.Set("excludedAttributes", strings.Join(excludedAttributes, ","))
+		}
 	}
 	if count != nil {
 		queryParams.Set("count", fmt.Sprintf("%d", *count))
-	}
-	if sortBy != "" {
-		queryParams.Set("sortBy", sortBy)
-	}
-	if sortOrder != "" {
-		queryParams.Set("sortOrder", sortOrder)
-	}
-	if len(attributes) > 0 {
-		queryParams.Set("attributes", strings.Join(attributes, ","))
-	}
-	if len(excludedAttributes) > 0 {
-		queryParams.Set("excludedAttributes", strings.Join(excludedAttributes, ","))
 	}
 	u.RawQuery = queryParams.Encode()
 
