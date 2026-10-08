@@ -168,6 +168,8 @@ Search SCIM resources.
 ```bash
 scim-ctl search --resource user --filter 'userName eq "bob"'
 scim-ctl search -r user -q "john doe"
+scim-ctl search -r user --use-cursor
+scim-ctl search -r user --cursor "opaque-cursor-value"
 ```
 
 | Parameter          | Alias | Description                                    |
@@ -177,6 +179,8 @@ scim-ctl search -r user -q "john doe"
 | `--query`          | `-q`  | Full-text search query (out of SCIM spec)      |
 | `--start-index`    | `-s`  | Paginations start index                        |
 | `--items-per-page` | `-i`  | Paginations size                               |
+| `--use-cursor`     | n/a   | Use cursor-based pagination (RFC 9865)         |
+| `--cursor`         | n/a   | Cursor for cursor-based pagination (RFC 9865)  |
 
 ### Export (`export`)
 
@@ -185,6 +189,7 @@ Export all SCIM resources as JSON Lines text format. Pagination is handled autom
 ```bash
 scim-ctl export --resource user --filter 'userName eq "bob"'
 scim-ctl export -r group -f 'displayName co "admin"' --items-per-page 100
+scim-ctl export -r user --use-cursor
 ```
 
 | Parameter          | Alias | Description                                    |
@@ -193,6 +198,7 @@ scim-ctl export -r group -f 'displayName co "admin"' --items-per-page 100
 | `--filter`         | `-f`  | SCIM filter expression                         |
 | `--query`          | `-q`  | Full-text search query (out of SCIM spec)      |
 | `--items-per-page` | `-i`  | Paginations size                               |
+| `--use-cursor`     | n/a   | Use cursor-based pagination (RFC 9865)         |
 
 ### Import (`import`)
 
