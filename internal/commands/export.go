@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/ncarlier/scim-ctl/pkg/config"
 	"github.com/ncarlier/scim-ctl/pkg/scim"
@@ -74,6 +75,8 @@ Examples:
 			count = &exportItemsPerPage
 		}
 
+		startTime := time.Now()
+
 		for {
 			// Search for resources
 			results, err := client.SearchResources(ctx, exportResourceType, exportFilter, exportQuery, startIndex, count, exportSortBy, exportSortOrder, exportAttributes, exportExcludedAttributes, currentCursor)
@@ -112,11 +115,14 @@ Examples:
 					if totalResults > 0 {
 						currentPercent := (exportedCount * 100) / totalResults
 						if currentPercent > lastReportedPercent {
-							fmt.Fprintf(os.Stderr, "Exporting... %d%%\r", currentPercent)
+							elapsed := time.Since(startTime)
+							eta := time.Duration(float64(elapsed) / float64(exportedCount) * float64(totalResults-exportedCount)).Round(time.Second)
+							fmt.Fprintf(os.Stderr, "Exporting... %d%% (ETA: %v)\033[K\r", currentPercent, eta)
 							lastReportedPercent = currentPercent
 						}
 					} else {
-						fmt.Fprintf(os.Stderr, "Exporting... %d resources\r", exportedCount)
+						elapsed := time.Since(startTime).Round(time.Second)
+						fmt.Fprintf(os.Stderr, "Exporting... %d resources (Elapsed: %v)\033[K\r", exportedCount, elapsed)
 					}
 				}
 			}
