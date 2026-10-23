@@ -16,10 +16,11 @@ var (
 	timeout       int
 	maxRetries    int
 	oidcIssuer    string
-	clientID      string
-	clientSecret  string
-	privateKey    string
-	oidcGrantType string
+	clientID           string
+	clientSecret       string
+	privateKey         string
+	privateKeyPassword string
+	oidcGrantType      string
 	cacheDir      string
 	extraHeaders  map[string]string
 )
@@ -60,6 +61,7 @@ There is NO WARRANTY, to the extent permitted by law.
 	rootCmd.PersistentFlags().StringVar(&clientID, "oidc-client-id", "", "OIDC Client ID (env: SCIM_CTL_OIDC_CLIENT_ID)")
 	rootCmd.PersistentFlags().StringVar(&clientSecret, "oidc-client-secret", "", "OIDC Client Secret (env: SCIM_CTL_OIDC_CLIENT_SECRET)")
 	rootCmd.PersistentFlags().StringVar(&privateKey, "oidc-private-key", "", "OIDC Private Key or path to PEM file (env: SCIM_CTL_OIDC_PRIVATE_KEY)")
+	rootCmd.PersistentFlags().StringVar(&privateKeyPassword, "oidc-private-key-password", "", "Password for encrypted OIDC Private Key (env: SCIM_CTL_OIDC_PRIVATE_KEY_PASSWORD)")
 	rootCmd.PersistentFlags().StringVar(&oidcGrantType, "oidc-grant-type", "device_code", "OIDC Grant Type (device_code or client_credentials) (env: SCIM_CTL_OIDC_GRANT_TYPE)")
 	rootCmd.PersistentFlags().StringVar(&cacheDir, "cache-dir", "", "Cache directory for tokens (env: SCIM_CTL_CACHE_DIR)")
 	rootCmd.PersistentFlags().StringToStringVar(&extraHeaders, "extra-header", nil, "Extra HTTP header to send with requests (format: key=value, can be specified multiple times)")
@@ -73,6 +75,7 @@ There is NO WARRANTY, to the extent permitted by law.
 	viper.BindPFlag("oidc.client-id", rootCmd.PersistentFlags().Lookup("oidc-client-id"))
 	viper.BindPFlag("oidc.client-secret", rootCmd.PersistentFlags().Lookup("oidc-client-secret"))
 	viper.BindPFlag("oidc.private-key", rootCmd.PersistentFlags().Lookup("oidc-private-key"))
+	viper.BindPFlag("oidc.private-key-password", rootCmd.PersistentFlags().Lookup("oidc-private-key-password"))
 	viper.BindPFlag("oidc.grant-type", rootCmd.PersistentFlags().Lookup("oidc-grant-type"))
 	viper.BindPFlag("cache-dir", rootCmd.PersistentFlags().Lookup("cache-dir"))
 	viper.BindPFlag("extra-headers", rootCmd.PersistentFlags().Lookup("extra-header"))
@@ -85,6 +88,7 @@ There is NO WARRANTY, to the extent permitted by law.
 	viper.BindEnv("oidc.client-id", "SCIM_CTL_OIDC_CLIENT_ID")
 	viper.BindEnv("oidc.client-secret", "SCIM_CTL_OIDC_CLIENT_SECRET")
 	viper.BindEnv("oidc.private-key", "SCIM_CTL_OIDC_PRIVATE_KEY")
+	viper.BindEnv("oidc.private-key-password", "SCIM_CTL_OIDC_PRIVATE_KEY_PASSWORD")
 	viper.BindEnv("oidc.grant-type", "SCIM_CTL_OIDC_GRANT_TYPE")
 	viper.BindEnv("cache-dir", "SCIM_CTL_CACHE_DIR")
 

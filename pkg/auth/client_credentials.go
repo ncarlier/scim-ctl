@@ -2,7 +2,9 @@ package auth
 
 import (
 	"context"
+	"crypto/rsa"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -12,6 +14,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/youmark/pkcs8"
 )
 
 func (a *Authenticator) performClientCredentialsFlow(ctx context.Context, verbose bool) (*TokenResponse, error) {
@@ -35,7 +38,26 @@ func (a *Authenticator) performClientCredentialsFlow(ctx context.Context, verbos
 			}
 		}
 
-		privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(pemBytes)
+		var privateKey *rsa.PrivateKey
+		var err error
+		if a.config.PrivateKeyPassword != "" {
+			block, _ := pem.Decode(pemBytes)
+			if block == nil {
+				err = fmt.Errorf("failed to parse PEM block containing the key")
+			} else {
+				var key interface{}
+				key, err = pkcs8.ParsePKCS8PrivateKey(block.Bytes, []byte(a.config.PrivateKeyPassword))
+				if err == nil {
+					var ok bool
+					privateKey, ok = key.(*rsa.PrivateKey)
+					if !ok {
+						err = fmt.Errorf("key is not an RSA private key")
+					}
+				}
+			}
+		} else {
+			privateKey, err = jwt.ParseRSAPrivateKeyFromPEM(pemBytes)
+		}
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse private key: %w", err)
 		}

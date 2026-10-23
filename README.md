@@ -42,15 +42,20 @@ It obtains the Access Token from an OIDC provider using OAuth 2.0 (Device Author
 
 **Configuration:**
 
-| Parameter               | Env                            | Description           |
-| ----------------------- | ------------------------------ | --------------------- |
-| `--oidc-issuer`         | `SCIM_CTL_OIDC_ISSUER`         | OpenID Connect Issuer |
-| `--oidc-client-id`      | `SCIM_CTL_OIDC_CLIENT_ID`      | Client ID             |
-| `--oidc-client-secret`  | `SCIM_CTL_OIDC_CLIENT_SECRET`  | Client Secret         |
-| `--oidc-grant-type`     | `SCIM_CTL_OIDC_GRANT_TYPE`     | Grant Type            |
-| `--extra-header`        | -                              | Extra HTTP headers (format: `key=value`, can be specified multiple times) |
+| Parameter                     | Env                                      | Description           |
+| ----------------------------- | ---------------------------------------- | --------------------- |
+| `--oidc-issuer`               | `SCIM_CTL_OIDC_ISSUER`                   | OpenID Connect Issuer |
+| `--oidc-client-id`            | `SCIM_CTL_OIDC_CLIENT_ID`                | Client ID             |
+| `--oidc-client-secret`        | `SCIM_CTL_OIDC_CLIENT_SECRET`            | Client Secret         |
+| `--oidc-private-key`          | `SCIM_CTL_OIDC_PRIVATE_KEY`              | OIDC Private Key or path to PEM file |
+| `--oidc-private-key-password` | `SCIM_CTL_OIDC_PRIVATE_KEY_PASSWORD`     | Password for encrypted OIDC Private Key |
+| `--oidc-grant-type`           | `SCIM_CTL_OIDC_GRANT_TYPE`               | Grant Type            |
+| `--extra-header`              | -                                        | Extra HTTP headers (format: `key=value`, can be specified multiple times) |
 
 Supported grant types are `client_credentials` or `device_code` (default).
+
+When using the `client_credentials` grant type, you can authenticate using a client secret (`--oidc-client-secret`) or a private key JWT (`--oidc-private-key`). 
+If the private key is encrypted and requires a password, you must provide it with `--oidc-private-key-password`. Note that encrypted private keys **must** be in **PKCS#8** format.
 
 ## Configuration File
 

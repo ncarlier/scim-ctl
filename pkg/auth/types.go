@@ -9,16 +9,17 @@ const TOKEN_VALIDITY_WINDOW = 1 * time.Minute
 
 // AuthConfig represents the authentication configuration
 type AuthConfig struct {
-	Issuer       string
-	ClientID     string
-	ClientSecret string
-	PrivateKey   string
-	GrantType    string
-	Scopes       []string
-	CacheDir     string
-	Timeout      time.Duration
-	MaxRetries   int
-	Verbose      bool
+	Issuer             string
+	ClientID           string
+	ClientSecret       string
+	PrivateKey         string
+	PrivateKeyPassword string
+	GrantType          string
+	Scopes             []string
+	CacheDir           string
+	Timeout            time.Duration
+	MaxRetries         int
+	Verbose            bool
 }
 
 // DeviceCodeResponse represents the device code response
