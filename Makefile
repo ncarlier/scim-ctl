@@ -103,6 +103,14 @@ install: release/$(EXECUTABLE)
 	@echo ">>> Installation complete ✅"
 .PHONY: install
 
+## Install agent skill
+install-skill:
+	@echo ">>> Installing agent skill to ${HOME}/.agents/skills/$(APPNAME) ..."
+	mkdir -p ${HOME}/.agents/skills/$(APPNAME)
+	cp -R .agents/skills/$(APPNAME)/. ${HOME}/.agents/skills/$(APPNAME)/
+	@echo ">>> Agent skill installation complete ✅"
+.PHONY: install-skill
+
 # Generate changelog
 CHANGELOG.md:
 	standard-changelog --first-release
