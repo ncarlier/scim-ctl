@@ -23,6 +23,7 @@ type OIDC struct {
 	Issuer       string `mapstructure:"issuer"`
 	ClientID     string `mapstructure:"client-id"`
 	ClientSecret string `mapstructure:"client-secret"`
+	PrivateKey   string `mapstructure:"private-key"`
 	GrantType    string `mapstructure:"grant-type"`
 }
 
@@ -55,8 +56,8 @@ func (c *Config) Validate() error {
 			return errors.New("OIDC client ID is required")
 		}
 
-		if c.OIDC.GrantType == "client_credentials" && c.OIDC.ClientSecret == "" {
-			return errors.New("OIDC client secret is required for client_credentials grant type")
+		if c.OIDC.GrantType == "client_credentials" && c.OIDC.ClientSecret == "" && c.OIDC.PrivateKey == "" {
+			return errors.New("OIDC client secret or private key is required for client_credentials grant type")
 		}
 	}
 

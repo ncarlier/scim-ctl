@@ -147,6 +147,7 @@ func (c *Client) Authenticate(ctx context.Context, cfg *config.Config) error {
 		Issuer:       cfg.OIDC.Issuer,
 		ClientID:     cfg.OIDC.ClientID,
 		ClientSecret: cfg.OIDC.ClientSecret,
+		PrivateKey:   cfg.OIDC.PrivateKey,
 		GrantType:    cfg.OIDC.GrantType,
 		Scopes:       []string{"openid"},
 		CacheDir:     cfg.CacheDir,
