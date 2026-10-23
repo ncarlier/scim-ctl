@@ -20,11 +20,12 @@ type Config struct {
 
 // OIDC represents the OAuth 2.0 configuration
 type OIDC struct {
-	Issuer       string `mapstructure:"issuer"`
-	ClientID     string `mapstructure:"client-id"`
-	ClientSecret string `mapstructure:"client-secret"`
-	PrivateKey   string `mapstructure:"private-key"`
-	GrantType    string `mapstructure:"grant-type"`
+	Issuer             string `mapstructure:"issuer"`
+	ClientID           string `mapstructure:"client-id"`
+	ClientSecret       string `mapstructure:"client-secret"`
+	PrivateKey         string `mapstructure:"private-key"`
+	PrivateKeyPassword string `mapstructure:"private-key-password"`
+	GrantType          string `mapstructure:"grant-type"`
 }
 
 // Get returns the current configuration
